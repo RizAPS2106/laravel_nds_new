@@ -710,8 +710,8 @@ class PartController extends Controller
                 GROUP_CONCAT(DISTINCT master_part.nama_part ORDER BY master_part.nama_part ASC SEPARATOR ' || ') part_details,
                 GROUP_CONCAT(DISTINCT CONCAT(marker_input_detail.size, '(', marker_input_detail.ratio, ')') SEPARATOR ' / ') marker_details
             ")->
-            leftJoin("part_form", "part_form.form_id", "=", "form_cut_input.id")->
-            leftJoin("part", "part.id", "=", "part_form.part_id")->
+            leftJoin("part_form", "part_form.no_form", "=", "form_cut_input.no_form")->
+            leftJoin("part", "part.kode", "=", "part_form.part_kode")->
             leftJoin("part_detail", "part_detail.part_id", "=", "part.id")->
             leftJoin("master_part", "master_part.id", "=", "part_detail.master_part_id")->
             leftJoin("marker_input", "marker_input.kode", "=", "form_cut_input.id_marker")->
