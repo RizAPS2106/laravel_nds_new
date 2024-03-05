@@ -1,9 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Cutting;
 
 use Illuminate\Http\Request;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+
+use App\Http\Controllers\Controller;
+
 use App\Models\Marker;
 use App\Models\MarkerDetail;
 use App\Models\FormCutInput;
@@ -13,8 +16,9 @@ use App\Models\ScannedItem;
 use App\Models\Part;
 use App\Models\PartForm;
 use App\Models\User;
+
 use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 use DB;
 
 class ManagerController extends Controller

@@ -1,15 +1,19 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Cutting;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
+use App\Http\Controllers\Controller;
+
 use App\Models\FormCutInput;
+
 use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
 use DB;
 
-class SummaryController extends Controller
+class SummaryCuttingController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -102,10 +106,6 @@ class SummaryController extends Controller
         }
 
         return view('summary', ["page" => "dashboard-cutting", "subPage" => "summary-cutting"]);
-    }
-
-    public function secondary(Request $request) {
-        //
     }
 
     /**

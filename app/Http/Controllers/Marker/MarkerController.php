@@ -1,13 +1,17 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Marker;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+use App\Http\Controllers;
 
 use App\Models\Marker;
 use App\Models\MarkerDetail;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+
 use Yajra\DataTables\Facades\DataTables;
+use Carbon\Carbon;
 use PDF;
 
 class MarkerController extends Controller
