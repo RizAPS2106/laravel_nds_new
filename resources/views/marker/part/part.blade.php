@@ -1,12 +1,5 @@
 @extends('layouts.index')
 
-@section('custom-link')
-    <!-- DataTables -->
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
-@endsection
-
 @section('content')
     {{-- Part Data --}}
     <div class="card">
@@ -21,11 +14,11 @@
             <div class="d-flex align-items-end gap-3 mb-3">
                 <div>
                     <label class="form-label"><small>Tanggal Awal</small></label>
-                    <input type="date" class="form-control form-control-sm" id="tgl-awal" name="tgl_awal" onchange="datatablePartReload()">
+                    <input type="date" class="form-control form-control-sm" id="tanggal_awal" name="tanggal_awal" onchange="datatablePartReload()">
                 </div>
                 <div>
                     <label class="form-label"><small>Tanggal Akhir</small></label>
-                    <input type="date" class="form-control form-control-sm" id="tgl-akhir" name="tgl_akhir" value="{{ date('Y-m-d') }}" onchange="datatablePartReload()">
+                    <input type="date" class="form-control form-control-sm" id="tanggal_akhir" name="tanggal_akhir" value="{{ date('Y-m-d') }}" onchange="datatablePartReload()">
                 </div>
                 <div>
                     <button class="btn btn-primary btn-sm" onclick="datatablePartReload()"><i class="fa fa-search"></i></button>
@@ -35,7 +28,7 @@
                 <table id="datatable-part" class="table table-bordered table-sm w-100">
                     <thead>
                         <tr>
-                            <th class="align-bottom">Action</th>
+                            <th>Action</th>
                             <th>Kode Part</th>
                             <th>No. WS</th>
                             <th>Buyer</th>
@@ -56,7 +49,7 @@
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header bg-sb text-light">
-                    <h1 class="modal-title fs-5" id="detailPartLabel">Detail Part</h1>
+                    <h1 class="modal-title fs-5" id="detailPartLabel"><i class="fa fa-search-plus fa-sm"></i> Detail Part</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -133,12 +126,6 @@
 @endsection
 
 @section('custom-script')
-    <!-- DataTables  & Plugins -->
-    <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
-
     <script>
         // Initial Function
         document.addEventListener("DOMContentLoaded", () => {
@@ -149,7 +136,7 @@
             let oneWeeksBeforeYear = oneWeeksBefore.getFullYear();
             let oneWeeksBeforeFull = oneWeeksBeforeYear + '-' + oneWeeksBeforeMonth + '-' + oneWeeksBeforeDate;
 
-            $("#tgl-awal").val(oneWeeksBeforeFull).trigger("change");
+            $("#tanggal_awal").val(oneWeeksBeforeFull).trigger("change");
 
             window.addEventListener("focus", () => {
                 $('#datatable').DataTable().ajax.reload(null, false);
@@ -164,7 +151,8 @@
             ajax: {
                 url: '{{ route('part') }}',
                 data: function(d) {
-                    d.id = $("detail_id").val();
+                    d.tanggal_awal = $("#tanggal_awal").val();
+                    d.tanggal_akhir = $("#tanggal_akhir").val();
                 }
             },
             columns: [
@@ -206,7 +194,7 @@
                         return `
                             <div class='d-flex gap-1 justify-content-center'>
                                 <buton type="button" onclick='showPartForm(` + JSON.stringify(row) + `)' class='btn btn-primary btn-sm'>
-                                    <i class='fa fa-search'></i>
+                                    <i class='fa fa-search-plus'></i>
                                 </buton>
                                 <a href='{{ route('manage-part-secondary') }}/` + row['id'] + `' class='btn btn-info btn-sm'>
                                     <i class='fa fa-plus-circle'></i>
@@ -312,11 +300,9 @@
             columns: [
                 {
                     data: null,
-                    searchable: false
                 },
                 {
                     data: 'tanggal_selesai',
-                    searchable: false
                 },
                 {
                     data: 'no_form'
@@ -331,21 +317,19 @@
                     data: 'color'
                 },
                 {
-                    data: 'no_cut',
+                    data: 'no_cut_form',
                 },
                 {
                     data: 'part_details'
                 },
                 {
-                    data: 'total_lembar',
-                    searchable: false
+                    data: 'total_ply',
                 },
                 {
                     data: 'marker_details',
-                    searchable: false
                 },
                 {
-                    data: 'id_marker'
+                    data: 'marker_input_kode'
                 },
                 {
                     data: 'act_costing_ws'

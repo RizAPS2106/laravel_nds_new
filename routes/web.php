@@ -123,16 +123,15 @@ Route::middleware('auth')->group(function () {
 
             // part form
             Route::get('/manage-part-form/{id?}', 'managePartForm')->name('manage-part-form');
-            Route::get('/get-form-cut/{id?}', 'getFormCut')->name('get-part-form-cut');
+            Route::get('/get-part-form/{id?}', 'getPartForm')->name('get-part-form');
             Route::post('/store-part-form', 'storePartForm')->name('store-part-form');
             Route::delete('/destroy-part-form', 'destroyPartForm')->name('destroy-part-form');
             Route::get('/show-part-form', 'showPartForm')->name('show-part-form');
 
             // part secondary
             Route::get('/manage-part-secondary/{id?}', 'managePartSecondary')->name('manage-part-secondary');
-            Route::get('/datatable_list_part/{id?}', 'datatable_list_part')->name('datatable_list_part');
-            Route::get('/get_proses', 'get_proses')->name('get_proses');
-            Route::post('/store_part_secondary', 'store_part_secondary')->name('store_part_secondary');
+            Route::get('/show-part-list/{id?}', 'showPartList')->name('show-part-list');
+            Route::post('/store-part-secondary', 'store-part-secondary')->name('store-part-secondary');
 
             // get order
             Route::get('/get-order', 'getOrderInfo')->name('get-part-order');
@@ -145,7 +144,9 @@ Route::middleware('auth')->group(function () {
             // get master tujuan
             Route::get('/get-master-tujuan', 'getMasterTujuan')->name('get-master-tujuan');
             // get master secondary
-            Route::get('/get-master-secondary', 'getMasterSecondary')->name('get-master-secondary');
+            Route::get('/get-master-secondaries', 'getMasterSecondaries')->name('get-master-secondaries');
+            // get master secondary with filter
+            Route::get('/get-master-secondaries-filter', 'getMasterSecondariesFilter')->name('get-master-secondaries-filter');
         });
 
         // Marker

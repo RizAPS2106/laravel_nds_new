@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Marker;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\Controller;
 
@@ -82,6 +83,7 @@ class MasterPartController extends Controller
             "kode" => $masterPartCode,
             "nama_part" => $validatedRequest["nama_part"],
             "bagian" => $validatedRequest["bagian"],
+            "created_by" => Auth::user()->username
         ]);
 
         if ($masterPartStore) {

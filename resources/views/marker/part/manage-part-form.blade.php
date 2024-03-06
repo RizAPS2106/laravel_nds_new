@@ -1,15 +1,5 @@
 @extends('layouts.index')
 
-@section('custom-link')
-    <!-- DataTables -->
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
-    <!-- Select2 -->
-    <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
-@endsection
-
 @section('content')
     <div class="card card-sb">
         <div class="card-header">
@@ -35,7 +25,7 @@
                     <div class="col-md-3">
                         <div class="mb-3">
                             <label><small><b>No. WS</b></small></label>
-                            <input type="text" class="form-control form-control-sm" name="ws" id="ws" value="{{ $part->act_costing_ws }}" readonly>
+                            <input type="text" class="form-control form-control-sm" name="act_costing_ws" id="act_costing_ws" value="{{ $part->act_costing_ws }}" readonly>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -79,22 +69,12 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <h5 class="card-title fw-bold">
-                                Form Cut yang belum ditambahkan :
+                                <i class="fa fa-list fa-sm"></i> Form Cut yang belum ditambahkan :
                             </h5>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
-                    {{-- <div class="d-flex gap-3">
-                        <div class="mb-3">
-                            <label><small><b>Tgl Awal</b></small></label>
-                            <input type="date" class="form-control form-control-sm w-auto" id="tgl_awal" name="tgl_awal" value="{{ date('Y-m-d') }}">
-                        </div>
-                        <div class="mb-3">
-                            <label><small><b>Tgl Akhir</b></small></label>
-                            <input type="date" class="form-control form-control-sm w-auto" id="tgl_akhir" name="tgl_akhir" value="{{ date('Y-m-d') }}">
-                        </div>
-                    </div> --}}
                     <div class="row justify-content-between mb-3">
                         <div class="col-6">
                             <p>Form yang dipilih : <span class="fw-bold" id="selected-row-count-2">0</span></p>
@@ -130,10 +110,10 @@
             </div>
         </div>
         <div class="col-12 mb-3">
-            <div class="card card-info h-100">
+            <div class="card card-success h-100">
                 <div class="card-header">
                     <h5 class="card-title mb-0 fw-bold" style="padding-bottom: 2px">
-                        Form Cut yang sudah ditambahkan :
+                        <i class="fa fa-list-check fa-sm"></i> Form Cut yang sudah ditambahkan :
                     </h5>
                 </div>
                 <div class="card-body">
@@ -173,14 +153,6 @@
 @endsection
 
 @section('custom-script')
-    <!-- DataTables  & Plugins -->
-    <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
-    <!-- Select2 -->
-    <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
-    <!-- Page specific script -->
     <script>
         //Initialize Select2 Elements
         $('.select2').select2()
@@ -196,7 +168,7 @@
         }
 
         var id = document.getElementById("id").value;
-        var ws = document.getElementById("ws").value;
+        var actCostingWs = document.getElementById("act_costing_ws").value;
         var panel = document.getElementById("panel").value;
 
         //Form Part Datatable
@@ -207,7 +179,7 @@
             ajax: {
                 url: '{{ route('manage-part-form') }}/'+id,
                 data: function(d) {
-                    d.act_costing_ws = $('#ws').val();
+                    d.act_costing_ws = $('#act_costing_ws').val();
                     d.panel = $('#panel').val();
                 },
             },
@@ -216,13 +188,13 @@
                     data: 'no_form'
                 },
                 {
-                    data: 'tgl_form_cut'
+                    data: 'tanggal'
                 },
                 {
                     data: 'nama_meja'
                 },
                 {
-                    data: 'id_marker'
+                    data: 'marker_input_kode'
                 },
                 {
                     data: 'act_costing_ws'
@@ -431,9 +403,9 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: '{{ route('get-part-form-cut') }}/',
+                url: '{{ route('get-part-form') }}/',
                 data: function(d) {
-                    d.act_costing_ws = $('#ws').val();
+                    d.act_costing_ws = $('#act_costing_ws').val();
                     d.panel = $('#panel').val();
                 },
             },
@@ -442,16 +414,16 @@
                     data: 'no_form'
                 },
                 {
-                    data: 'tgl_form_cut'
+                    data: 'tanggal'
                 },
                 {
                     data: 'nama_meja'
                 },
                 {
-                    data: 'id_marker'
+                    data: 'marker_input_kode'
                 },
                 {
-                    data: 'ws'
+                    data: 'act_costing_ws'
                 },
                 {
                     data: 'style'
@@ -555,7 +527,8 @@
                                 }
 
                                 if (res.table != '') {
-                                    $('#' + res.table).DataTable().ajax.reload(() => {document.getElementById('selected-row-count-2').innerText = $('#' + res.table).DataTable().rows('.selected').data().length;
+                                    $('#' + res.table).DataTable().ajax.reload(() => {
+                                        document.getElementById('selected-row-count-2').innerText = $('#' + res.table).DataTable().rows('.selected').data().length;
                                     });
 
                                     $('#datatable-select').DataTable().ajax.reload(() => {

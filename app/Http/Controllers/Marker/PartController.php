@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Marker;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 use App\Models\MasterPart;
 use App\Models\MasterTujuan;
@@ -29,7 +30,7 @@ class PartController extends Controller
     {
         if ($request->ajax()) {
             // Get Part Data
-            $partQuery = Part::selectRaw("
+            $part = Part::selectRaw("
                     part.id,
                     part.kode,
                     part.buyer,
@@ -51,8 +52,8 @@ class PartController extends Controller
                             select
                                 part_kode,
                                 count(id) total,
-                                SUM(CASE WHEN cons IS NULL THEN 0 ELSE 1 END) terisi,
-                                count(id) - SUM(CASE WHEN cons IS NULL THEN 0 ELSE 1 END) sisa
+                                SUM(CASE WHEN cons_part IS NULL THEN 0 ELSE 1 END) terisi,
+                                count(id) - SUM(CASE WHEN cons_part IS NULL THEN 0 ELSE 1 END) sisa
                             from
                                 part_detail
                             group by
@@ -63,7 +64,24 @@ class PartController extends Controller
                 )
                 ->groupBy("part.kode");
 
-            return DataTables::eloquent($partQuery)
+            return DataTables::eloquent($part)
+            ->filter(function ($query) {
+                if (request()->tanggal_awal) {
+                    $query->whereRaw("DATE(part.created_at) >= '" . request()->tanggal_awal . "'");
+                    $query->orWhereRaw("DATE(part.updated_at) >= '" . request()->tanggal_awal . "'");
+                }
+
+                if (request()->tanggal_akhir) {
+                    $query->whereRaw("DATE(part.created_at) <= '" . request()->tanggal_akhir . "'");
+                    $query->orWhereRaw("DATE(part.updated_at) <= '" . request()->tanggal_akhir . "'");
+                }
+            })
+            ->filterColumn('kode', function ($query, $keyword) {
+                $query->whereRaw("LOWER(kode) LIKE LOWER('%" . $keyword . "%')");
+            })
+            ->filterColumn('buyer', function ($query, $keyword) {
+                $query->whereRaw("LOWER(buyer) LIKE LOWER('%" . $keyword . "%')");
+            })
             ->filterColumn('act_costing_ws', function ($query, $keyword) {
                 $query->whereRaw("LOWER(act_costing_ws) LIKE LOWER('%" . $keyword . "%')");
             })
@@ -77,7 +95,10 @@ class PartController extends Controller
                 $query->whereRaw("LOWER(panel) LIKE LOWER('%" . $keyword . "%')");
             })
             ->order(function ($query) {
-                $query->orderBy('part.kode', 'desc')->orderBy('part.updated_at', 'desc');
+                $query->
+                    orderBy('part.created_at', 'desc')->
+                    orderBy('part.updated_at', 'desc')->
+                    orderBy('part.kode', 'desc');
             })
             ->toJson();
         }
@@ -92,7 +113,16 @@ class PartController extends Controller
      */
     public function create()
     {
-        $orders = DB::connection('mysql_sb')->table('act_costing')->select('id', 'kpno')->where('status', '!=', 'CANCEL')->where('cost_date', '>=', '2023-01-01')->where('type_ws', 'STD')->orderBy('cost_date', 'desc')->orderBy('kpno', 'asc')->groupBy('kpno')->get();
+        $orders = DB::connection('mysql_sb')->
+            table('act_costing')->
+            select('id', 'kpno')->
+            where('status', '!=', 'CANCEL')->
+            where('cost_date', '>=', '2023-01-01')->
+            where('type_ws', 'STD')->
+            orderBy('cost_date', 'desc')->
+            orderBy('kpno', 'asc')->
+            groupBy('kpno')->
+            get();
 
         $masterParts = MasterPart::all();
         $masterTujuan = MasterTujuan::all();
@@ -103,20 +133,22 @@ class PartController extends Controller
 
     public function getOrderInfo(Request $request)
     {
-        $order = DB::connection('mysql_sb')->table('act_costing')->selectRaw('
+        $order = DB::connection('mysql_sb')->
+            table('act_costing')->
+            selectRaw('
                 act_costing.id,
                 act_costing.kpno,
                 act_costing.styleno,
                 act_costing.qty order_qty,
                 mastersupplier.supplier buyer,
                 GROUP_CONCAT(DISTINCT so_det.color SEPARATOR ", ") colors
-            ')
-            ->leftJoin('mastersupplier', 'mastersupplier.Id_Supplier', '=', 'act_costing.id_buyer')
-            ->leftJoin('so', 'so.id_cost', '=', 'act_costing.id')
-            ->leftJoin('so_det', 'so_det.id_so', '=', 'so.id')
-            ->where('act_costing.id', $request->act_costing_id)
-            ->groupBy('act_costing.id')
-            ->first();
+            ')->
+            leftJoin('mastersupplier', 'mastersupplier.Id_Supplier', '=', 'act_costing.id_buyer')->
+            leftJoin('so', 'so.id_cost', '=', 'act_costing.id')->
+            leftJoin('so_det', 'so_det.id_so', '=', 'so.id')->
+            where('act_costing.id', $request->act_costing_id)->
+            groupBy('act_costing.id')->
+            first();
 
         return json_encode($order);
     }
@@ -186,9 +218,9 @@ class PartController extends Controller
 
     public function getPartDetail(Request $request)
     {
-        $partDetails =
+        $partDetails = PartDetail::all();
 
-            $html = "<option value=''>Pilih Panel</option>";
+        $html = "<option value=''>Pilih Panel</option>";
 
         foreach ($panels as $panel) {
             $html .= " <option value='" . $panel->panel . "'>" . $panel->panel . "</option> ";
@@ -203,7 +235,7 @@ class PartController extends Controller
 
         $masterPartOptions = "<option value=''>Pilih Part</option>";
         foreach ($masterParts as $masterPart) {
-            $masterPartOptions .= "<option value='".$masterPart->id."'>".$masterPart->nama_part." - ".$masterPart->bag."</option>";
+            $masterPartOptions .= "<option value='".$masterPart->kode."'>".$masterPart->nama_part." - ".$masterPart->bagian."</option>";
         }
 
         return $masterPartOptions;
@@ -215,22 +247,42 @@ class PartController extends Controller
 
         $masterTujuanOptions = "<option value=''>Pilih Proses</option>";
         foreach ($masterTujuan as $tujuan) {
-            $masterTujuanOptions .= "<option value='".$tujuan->id."'>".$tujuan->tujuan."</option>";
+            $masterTujuanOptions .= "<option value='".$tujuan->kode."'>".$tujuan->tujuan."</option>";
         }
 
         return $masterTujuanOptions;
     }
 
-    public function getMasterSecondary(Request $request)
+    public function getMasterSecondaries(Request $request)
     {
         $masterSecondary = MasterSecondary::all();
 
         $masterSecondaryOptions = "<option value=''>Pilih Proses</option>";
         foreach ($masterSecondary as $secondary) {
-            $masterSecondaryOptions .= "<option value='".$secondary->id."' data-tujuan='".$secondary->id_tujuan."'>".$secondary->proses."</option>";
+            $masterSecondaryOptions .= "<option value='".$secondary->kode."' data-tujuan='".$secondary->tujuan_kode."'>".$secondary->proses."</option>";
         }
 
         return $masterSecondaryOptions;
+    }
+
+    public function getMasterSecondariesFilter(Request $request)
+    {
+        $masterSecondary = DB::select("
+            select
+                kode,
+                proses
+            from
+                master_secondary
+            where
+                kode = '" . $request->tujuan_kode . "'
+        ");
+        $html = "<option value=''>Pilih Proses</option>";
+
+        foreach ($masterSecondary as $dataproses) {
+            $html .= " <option value='" . $dataproses->kode . "'>" . $dataproses->proses . "</option> ";
+        }
+
+        return $html;
     }
 
     /**
@@ -241,14 +293,17 @@ class PartController extends Controller
      */
     public function store(Request $request)
     {
+        $timestamp = Carbon::now();
+
+        // Part
         $part = Part::select("kode")->orderBy("kode", "desc")->first();
         $partNumber = $part ? intval(substr($part->kode, -5)) + 1 : 1;
         $partCode = 'PRT' . sprintf('%05s', $partNumber);
         $totalPartDetail = intval($request["jumlah_part_detail"]);
 
         $validatedRequest = $request->validate([
-            "ws_id" => "required",
-            "ws" => "required",
+            "act_costing_id" => "required",
+            "act_costing_ws" => "required",
             "color" => "required",
             "panel" => "required",
             "buyer" => "required",
@@ -258,47 +313,58 @@ class PartController extends Controller
         if ($totalPartDetail > 0) {
             $partStore = Part::create([
                 "kode" => $partCode,
-                "act_costing_id" => $validatedRequest['ws_id'],
-                "act_costing_ws" => $validatedRequest['ws'],
-                "color" => $validatedRequest['color'],
-                "panel" => $validatedRequest['panel'],
+                "act_costing_id" => $validatedRequest['act_costing_id'],
+                "act_costing_ws" => $validatedRequest['act_costing_ws'],
                 "buyer" => $validatedRequest['buyer'],
                 "style" => $validatedRequest['style'],
+                "color" => $validatedRequest['color'],
+                "panel" => $validatedRequest['panel'],
+                "created_by" => Auth::user()->username,
             ]);
 
-            $timestamp = Carbon::now();
-            $partId = $partStore->id;
-            $partDetailData = [];
+            // Part Detail
+            $partDetails = [];
             for ($i = 0; $i < $totalPartDetail; $i++) {
-                if ($request["part_details"][$i] && $request["proses"][$i] && $request["cons"][$i] && $request["cons_unit"][$i]) {
-                    array_push($partDetailData, [
-                        "part_id" => $partId,
-                        "master_part_id" => $request["part_details"][$i],
-                        "master_secondary_id" => $request["proses"][$i],
-                        "cons" => $request["cons"][$i],
-                        "unit" => $request["cons_unit"][$i],
+                if ($request["part"][$i] && $request["proses"][$i] && $request["cons"][$i] && $request["unit_cons"][$i]) {
+                    array_push($partDetails, [
+                        "part_kode" => $partStore->kode,
+                        "master_part_kode" => $request["part"][$i],
+                        "master_secondary_kode" => $request["proses"][$i],
+                        "cons_part" => $request["cons"][$i],
+                        "unit_cons_part" => $request["unit_cons"][$i],
+                        "created_by" => Auth::user()->username,
                         "created_at" => $timestamp,
                         "updated_at" => $timestamp,
                     ]);
                 }
             }
+            $partDetailStore = PartDetail::insert($partDetails);
 
-            $partDetailStore = PartDetail::insert($partDetailData);
+            // Form Cut
+            $formCuts = FormCutInput::select('form_cut_input.id')->
+                leftJoin('marker_input', 'marker_input.kode', '=', 'form_cut_input.marker_input_kode')->
+                where("marker_input.act_costing_id", $partStore->act_costing_id)->
+                where("marker_input.act_costing_ws", $partStore->act_costing_ws)->
+                where("marker_input.buyer", $partStore->buyer)->
+                where("marker_input.style", $partStore->style)->
+                where("marker_input.panel", $partStore->panel)->
+                where("form_cut_input.status_form", "SELESAI PENGERJAAN")->
+                orderBy("no_cut_form", "asc")->
+                get();
 
-            $formCutData = FormCutInput::select('form_cut_input.id')->leftJoin('marker_input', 'marker_input.kode', '=', 'form_cut_input.id_marker')->where("marker_input.act_costing_id", $partStore->act_costing_id)->where("marker_input.act_costing_ws", $partStore->act_costing_ws)->where("marker_input.panel", $partStore->panel)->where("marker_input.buyer", $partStore->buyer)->where("marker_input.style", $partStore->style)->where("form_cut_input.status", "SELESAI PENGERJAAN")->orderBy("no_cut", "asc")->get();
-
-            foreach ($formCutData as $formCut) {
-                $isExist = PartForm::where("part_id", $partId)->where("form_id", $formCut->id)->count();
+            foreach ($formCuts as $formCut) {
+                $isExist = PartForm::where("part_kode", $partStore->kode)->where("form_kode", $formCut->kode)->count();
 
                 if ($isExist < 1) {
-                    $lastPartForm = PartForm::select("kode")->orderBy("kode", "desc")->first();
-                    $urutanPartForm = $lastPartForm ? intval(substr($lastPartForm->kode, -5)) + 1 : 1;
-                    $kodePartForm = "PFM" . sprintf('%05s', $urutanPartForm);
+                    $partForm = PartForm::select("kode")->orderBy("kode", "desc")->first();
+                    $partFormNumber = $partForm ? intval(substr($partForm->kode, -5)) + 1 : 1;
+                    $partFormCode = "PFM" . sprintf('%05s', $partFormNumber);
 
                     $addToPartForm = PartForm::create([
-                        "kode" => $kodePartForm,
-                        "part_id" => $partId,
-                        "form_id" => $formCut->id,
+                        "kode" => $partFormCode,
+                        "part_kode" => $partStore->kode,
+                        "no_form" => $formCut->no_form,
+                        "created_by" => Auth::user()->username,
                         "created_at" => Carbon::now(),
                         "updated_at" => Carbon::now(),
                     ]);
@@ -307,15 +373,16 @@ class PartController extends Controller
 
             return array(
                 "status" => 200,
-                "message" => $partCode,
-                "additional" => [],
-                "redirect" => route('manage-part-form', ["id" => $partStore->id])
+                "message" => "Parting berhasil ditambahkan. <br> '".$partCode."'",
+                "redirect" => route('manage-part-form', ["id" => $partStore->id]),
+                "additional" => []
             );
         }
 
         return array(
             "status" => 400,
-            "message" => "Harap pilih part",
+            "message" => "Parting gagal ditambahkan.",
+            "redirect" => "",
             "additional" => []
         );
     }
@@ -362,15 +429,17 @@ class PartController extends Controller
      */
     public function destroy(Part $part, $id = 0)
     {
-        $countPartForm = PartForm::where("part_id", $id)->count();
+        $part=Part::find("id", $id);
 
+        // Only for parting with no form
+        $countPartForm = PartForm::where("part_kode", $part->kode)->count();
         if ($countPartForm < 1) {
-            $deletePart = Part::where("id", $id)->delete();
+            $deletePart = $part->delete();
 
             if ($deletePart) {
                 return array(
                     'status' => 200,
-                    'message' => 'Part berhasil dihapus',
+                    'message' => 'Part <br>"'. $part->kode .'"<br> berhasil dihapus',
                     'redirect' => '',
                     'table' => 'datatable-part',
                     'additional' => [],
@@ -380,7 +449,7 @@ class PartController extends Controller
 
         return array(
             'status' => 400,
-            'message' => 'Part ini tidak dapat dihapus',
+            'message' => 'Part <br>"'. $part->kode .'"<br> tidak dapat dihapus',
             'redirect' => '',
             'table' => 'datatable-part',
             'additional' => [],
@@ -390,31 +459,33 @@ class PartController extends Controller
     public function managePartForm(Request $request, $id = 0)
     {
         if ($request->ajax()) {
+            // Parting's form
             $formCutInputs = FormCutInput::selectRaw("
                     form_cut_input.id,
-                    form_cut_input.id_marker,
+                    form_cut_input.tanggal,
                     form_cut_input.no_form,
-                    form_cut_input.tgl_form_cut,
-                    users.name nama_meja,
+                    form_cut_input.marker_input_kode,
+                    form_cut_input.total_ply,
+                    form_cut_input.no_cut_form,
+                    meja.name nama_meja,
                     marker_input.act_costing_ws,
                     marker_input.buyer,
                     marker_input.urutan_marker,
                     marker_input.style,
                     marker_input.color,
                     marker_input.panel,
-                    GROUP_CONCAT(DISTINCT CONCAT(master_size_new.size, '(', marker_input_detail.ratio, ')') SEPARATOR ', ') marker_details,
-                    form_cut_input.qty_ply,
-                    form_cut_input.no_cut
+                    GROUP_CONCAT(DISTINCT CONCAT(master_size_new.size, '(', marker_input_detail.ratio, ')') ORDER BY master_size_new.urutan ASC SEPARATOR ', ') marker_details
                 ")->
-                leftJoin("marker_input", "marker_input.kode", "=", "form_cut_input.id_marker")->
-                leftJoin("marker_input_detail", "marker_input_detail.marker_id", "=", "marker_input.id")->
+                leftJoin("marker_input", "marker_input.kode", "=", "form_cut_input.marker_input_kode")->
+                leftJoin("marker_input_detail", "marker_input_detail.marker_input_kode", "=", "marker_input.kode")->
                 leftJoin("master_size_new", "master_size_new.size", "=", "marker_input_detail.size")->
-                leftJoin("users", "users.id", "=", "form_cut_input.no_meja")->
                 leftJoin("part_form", "part_form.no_form", "=", "form_cut_input.no_form")->
-                where("form_cut_input.status", "SELESAI PENGERJAAN")->
-                where("part_form.part_id", $id)->
+                leftJoin("part", "part.kode", "=", "part_form.part_kode")->
+                leftJoin("users as meja", "meja.id", "=", "form_cut_input.meja_id")->
+                where("part.id", $id)->
                 where("marker_input.act_costing_ws", $request->act_costing_ws)->
                 where("marker_input.panel", $request->panel)->
+                where("form_cut_input.status_form", "finish")->
                 whereRaw("part_form.id is not null")->
                 groupBy("form_cut_input.id");
 
@@ -429,12 +500,13 @@ class PartController extends Controller
             })->filterColumn('panel', function ($query, $keyword) {
                 $query->whereRaw("LOWER(panel) LIKE LOWER('%" . $keyword . "%')");
             })->filterColumn('nama_meja', function ($query, $keyword) {
-                $query->whereRaw("LOWER(users.name) LIKE LOWER('%" . $keyword . "%')");
+                $query->whereRaw("LOWER(nama_meja) LIKE LOWER('%" . $keyword . "%')");
             })->order(function ($query) {
-                $query->orderBy('form_cut_input.no_cut', 'asc');
+                $query->orderBy('form_cut_input.no_cut_form', 'asc');
             })->toJson();
         }
 
+        // Parting
         $part = Part::selectRaw("
                 part.id,
                 part.kode,
@@ -443,36 +515,48 @@ class PartController extends Controller
                 part.style,
                 part.color,
                 part.panel,
-                GROUP_CONCAT(DISTINCT CONCAT(master_part.nama_part, ' - ', master_part.bag) ORDER BY master_part.nama_part SEPARATOR ', ') part_details
+                GROUP_CONCAT(DISTINCT CONCAT(master_part.nama_part, ' - ', master_part.bagian) ORDER BY master_part.nama_part ASC SEPARATOR ', ') part_details
             ")->
-            leftJoin("part_detail", "part_detail.part_id", "=", "part.id")->
-            leftJoin("master_part", "master_part.id", "part_detail.master_part_id")->
-            where("part.id", $id)->groupBy("part.id")->first();
+            leftJoin("part_detail", "part_detail.part_kode", "=", "part.kode")->
+            leftJoin("master_part", "master_part.kode", "part_detail.master_part_kode")->
+            where("part.id", $id)->
+            groupBy("part.id")->
+            first();
 
         return view("marker.part.manage-part-form", ["part" => $part, "page" => "dashboard-marker",  "subPageGroup" => "proses-marker", "subPage" => "part"]);
     }
 
-    public function managePartSecondary(Request $request, $id = 0)
+    public function getPartForm(Request $request, $id = 0)
     {
-        if ($request->ajax()) {
-            $formCutInputs = FormCutInput::selectRaw("
-                    form_cut_input.id,
-                    form_cut_input.id_marker,
-                    form_cut_input.no_form,
-                    form_cut_input.tgl_form_cut,
-                    users.name nama_meja,
-                    marker_input.act_costing_ws,
-                    marker_input.buyer,
-                    marker_input.urutan_marker,
-                    marker_input.style,
-                    marker_input.color,
-                    marker_input.panel,
-                    GROUP_CONCAT(DISTINCT CONCAT(master_size_new.size, '(', marker_input_detail.ratio, ')') SEPARATOR ', ') marker_details,
-                    form_cut_input.qty_ply,
-                    form_cut_input.no_cut
-                ")->leftJoin("marker_input", "marker_input.kode", "=", "form_cut_input.id_marker")->leftJoin("marker_input_detail", "marker_input_detail.marker_id", "=", "marker_input.id")->leftJoin("master_size_new", "master_size_new.size", "=", "marker_input_detail.size")->leftJoin("users", "users.id", "=", "form_cut_input.no_meja")->leftJoin("part_form", "part_form.form_id", "=", "form_cut_input.id")->where("form_cut_input.status", "SELESAI PENGERJAAN")->whereRaw("part_form.id is not null")->where("part_form.part_id", $id)->where("marker_input.act_costing_ws", $request->act_costing_ws)->where("marker_input.panel", $request->panel)->groupBy("form_cut_input.id");
+        $formCutInputs = FormCutInput::selectRaw("
+                form_cut_input.id,
+                form_cut_input.tanggal,
+                form_cut_input.no_form,
+                form_cut_input.marker_input_kode,
+                form_cut_input.total_ply,
+                form_cut_input.no_cut_form,
+                meja.name nama_meja,
+                marker_input.act_costing_ws,
+                marker_input.buyer,
+                marker_input.urutan_marker,
+                marker_input.color,
+                marker_input.style,
+                marker_input.panel,
+                GROUP_CONCAT(DISTINCT CONCAT(master_size_new.size, '(', marker_input_detail.ratio, ')') ORDER BY master_size_new.urutan ASC SEPARATOR ', ') marker_details
+            ")->
+            leftJoin("marker_input", "marker_input.kode", "=", "form_cut_input.marker_input_kode")->
+            leftJoin("marker_input_detail", "marker_input_detail.marker_input_kode", "=", "marker_input.kode")->
+            leftJoin("master_size_new", "master_size_new.size", "=", "marker_input_detail.size")->
+            leftJoin("users as meja", "meja.id", "=", "form_cut_input.meja_id")->
+            leftJoin("part_form", "part_form.no_form", "=", "form_cut_input.no_form")->
+            where("form_cut_input.status_form", "finish")->
+            where("marker_input.act_costing_ws", $request->act_costing_ws)->
+            where("marker_input.panel", $request->panel)->
+            whereRaw("part_form.id is null")->
+            groupBy("form_cut_input.id");
 
-            return Datatables::eloquent($formCutInputs)->filterColumn('act_costing_ws', function ($query, $keyword) {
+        return Datatables::eloquent($formCutInputs)->
+            filterColumn('act_costing_ws', function ($query, $keyword) {
                 $query->whereRaw("LOWER(act_costing_ws) LIKE LOWER('%" . $keyword . "%')");
             })->filterColumn('buyer', function ($query, $keyword) {
                 $query->whereRaw("LOWER(buyer) LIKE LOWER('%" . $keyword . "%')");
@@ -483,116 +567,77 @@ class PartController extends Controller
             })->filterColumn('panel', function ($query, $keyword) {
                 $query->whereRaw("LOWER(panel) LIKE LOWER('%" . $keyword . "%')");
             })->filterColumn('nama_meja', function ($query, $keyword) {
-                $query->whereRaw("LOWER(users.name) LIKE LOWER('%" . $keyword . "%')");
+                $query->whereRaw("LOWER(nama_meja) LIKE LOWER('%" . $keyword . "%')");
             })->order(function ($query) {
-                $query->orderBy('form_cut_input.no_cut', 'asc');
+                $query->orderBy('form_cut_input.no_cut_form', 'asc');
             })->toJson();
-        }
-
-        $part = Part::selectRaw("
-                part.id,
-                part.kode,
-                part.buyer,
-                part.act_costing_ws,
-                part.style,
-                part.color,
-                part.panel,
-                GROUP_CONCAT(DISTINCT CONCAT(master_part.nama_part, ' - ', master_part.bag) ORDER BY master_part.nama_part SEPARATOR ', ') part_details
-            ")->leftJoin("part_detail", "part_detail.part_id", "=", "part.id")->leftJoin("master_part", "master_part.id", "part_detail.master_part_id")->where("part.id", $id)->groupBy("part.id")->first();
-
-        // $data_part = DB::select("select pd.id isi, concat(nama_part,' - ',bag) tampil from part_detail pd
-        // inner join master_part mp on pd.master_part_id = mp.id
-        // where part_id = '$id'");
-
-        $data_part = MasterPart::all();
-
-        $data_tujuan = DB::select("select tujuan isi, tujuan tampil from master_tujuan");
-
-        return view("marker.part.manage-part-secondary", ["part" => $part, "data_part" => $data_part, "data_tujuan" => $data_tujuan, "page" => "dashboard-marker",  "subPageGroup" => "proses-marker", "subPage" => "part"]);
     }
 
-    public function get_proses(Request $request)
-    {
-        $data_proses = DB::select("select id isi, proses tampil from master_secondary
-        where tujuan = '" . $request->cbotuj . "'");
-        $html = "<option value=''>Pilih Proses</option>";
-
-        foreach ($data_proses as $dataproses) {
-            $html .= " <option value='" . $dataproses->isi . "'>" . $dataproses->tampil . "</option> ";
-        }
-
-        return $html;
-    }
-
-    public function store_part_secondary(Request $request)
-    {
-        $validatedRequest = $request->validate([
-            "cbotuj" => "required",
-            "txtpart" => "required",
-            "txtcons" => "required",
-            "cboproses" => "required",
-        ]);
-
-        // $update_part = DB::update("
-        //     update part_detail
-        //     set
-        //     master_secondary_id = '" . $validatedRequest['cboproses'] . "',
-        //     cons = '$request->txtcons',
-        //     unit = 'METER'
-        //     where id = '$request->txtpart'");
-
-        $update_part = PartDetail::updateOrCreate(['part_id' => $request->id, 'master_part_id' => $request->txtpart],[
-            'master_secondary_id' => $validatedRequest['cboproses'],
-            'cons' => $request->txtcons,
-            'unit' => 'METER',
-        ]);
-
-        if ($update_part) {
-            return array(
-                'icon' => 'benar',
-                'msg' => 'Data Part "' . $request->txtpart . '" berhasil diupdate',
-            );
-        }
-        return array(
-            'icon' => 'salah',
-            'msg' => 'Data Part "' . $request->txtpart . '" berhasil diupdate',
-        );
-    }
-
-    public function getFormCut(Request $request, $id = 0)
+    public function showPartForm(Request $request)
     {
         $formCutInputs = FormCutInput::selectRaw("
-                form_cut_input.id,
-                form_cut_input.id_marker,
+                DATE(form_cut_input.waktu_selesai) tanggal_selesai,
                 form_cut_input.no_form,
-                form_cut_input.tgl_form_cut,
-                users.name nama_meja,
-                marker_input.act_costing_ws ws,
+                form_cut_input.no_cut_form,
+                meja.name nama_meja,
+                marker_input.act_costing_ws,
                 marker_input.buyer,
-                marker_input.urutan_marker,
-                marker_input.color,
                 marker_input.style,
+                marker_input.color,
                 marker_input.panel,
-                GROUP_CONCAT(DISTINCT CONCAT(master_size_new.size, '(', marker_input_detail.ratio, ')') SEPARATOR ', ') marker_details,
-                form_cut_input.qty_ply,
-                form_cut_input.no_cut
-            ")->leftJoin("marker_input", "marker_input.kode", "=", "form_cut_input.id_marker")->leftJoin("marker_input_detail", "marker_input_detail.marker_id", "=", "marker_input.id")->leftJoin("master_size_new", "master_size_new.size", "=", "marker_input_detail.size")->leftJoin("users", "users.id", "=", "form_cut_input.no_meja")->leftJoin("part_form", "part_form.form_id", "=", "form_cut_input.id")->where("form_cut_input.status", "SELESAI PENGERJAAN")->whereRaw("part_form.id is null")->where("marker_input.act_costing_ws", $request->act_costing_ws)->where("marker_input.panel", $request->panel)->groupBy("form_cut_input.id");
+                marker_input.urutan_marker,
+                form_cut_input.total_ply,
+                part_detail.id part_detail_id,
+                part_form.kode part_form_kode,
+                part.kode part_kode,
+                GROUP_CONCAT(DISTINCT master_part.nama_part ORDER BY master_part.nama_part ASC SEPARATOR ' || ') part_details,
+                GROUP_CONCAT(DISTINCT CONCAT(marker_input_detail.size, '(', marker_input_detail.ratio, ')') ORDER BY master_size_new.urutan ASC SEPARATOR ' / ') marker_details
+            ")->
+            leftJoin("part_form", "part_form.no_form", "=", "form_cut_input.no_form")->
+            leftJoin("part", "part.kode", "=", "part_form.part_kode")->
+            leftJoin("part_detail", "part_detail.part_kode", "=", "part.kode")->
+            leftJoin("master_part", "master_part.kode", "=", "part_detail.master_part_kode")->
+            leftJoin("marker_input", "marker_input.kode", "=", "form_cut_input.marker_input_kode")->
+            leftJoin("marker_input_detail", "marker_input_detail.marker_input_kode", "=", "marker_input.kode")->
+            leftJoin("master_size_new", "master_size_new.size", "=", "marker_input_detail.size")->
+            leftJoin("users as meja", "meja.id", "=", "form_cut_input.meja_id")->
+            whereRaw("part_form.id is not null")->
+            where("part.id", $request->id)->
+            groupBy("form_cut_input.id");
 
-        return Datatables::eloquent($formCutInputs)->
-        filterColumn('act_costing_ws', function ($query, $keyword) {
-            $query->whereRaw("LOWER(act_costing_ws) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('buyer', function ($query, $keyword) {
-            $query->whereRaw("LOWER(buyer) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('style', function ($query, $keyword) {
-            $query->whereRaw("LOWER(style) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('color', function ($query, $keyword) {
-            $query->whereRaw("LOWER(color) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('panel', function ($query, $keyword) {
-            $query->whereRaw("LOWER(panel) LIKE LOWER('%" . $keyword . "%')");
+        return Datatables::of($formCutInputs)->
+        filterColumn('id_marker', function ($query, $keyword) {
+            $query->whereRaw("LOWER(form_cut_input.marker_kode) LIKE LOWER('%" . $keyword . "%')");
+        })->filterColumn('no_form', function ($query, $keyword) {
+            $query->whereRaw("LOWER(form_cut_input.no_form) LIKE LOWER('%" . $keyword . "%')");
         })->filterColumn('nama_meja', function ($query, $keyword) {
             $query->whereRaw("LOWER(users.name) LIKE LOWER('%" . $keyword . "%')");
+        })->filterColumn('act_costing_ws', function ($query, $keyword) {
+            $query->whereRaw("LOWER(marker_input.act_costing_ws) LIKE LOWER('%" . $keyword . "%')");
+        })->filterColumn('buyer', function ($query, $keyword) {
+            $query->whereRaw("LOWER(marker_input.buyer) LIKE LOWER('%" . $keyword . "%')");
+        })->filterColumn('style', function ($query, $keyword) {
+            $query->whereRaw("LOWER(marker_input.style) LIKE LOWER('%" . $keyword . "%')");
+        })->filterColumn('color', function ($query, $keyword) {
+            $query->whereRaw("LOWER(marker_input.color) LIKE LOWER('%" . $keyword . "%')");
+        })->filterColumn('panel', function ($query, $keyword) {
+            $query->whereRaw("LOWER(marker_input.panel) LIKE LOWER('%" . $keyword . "%')");
+        })->filterColumn('kode_part_form', function ($query, $keyword) {
+            $query->whereRaw("LOWER(part_form.kode) LIKE LOWER('%" . $keyword . "%')");
+        })->filterColumn('kode_part', function ($query, $keyword) {
+            $query->whereRaw("LOWER(part.kode) LIKE LOWER('%" . $keyword . "%')");
+        })->filterColumn('nama_part', function ($query, $keyword) {
+            $query->whereRaw("LOWER(master_part.nama_part) LIKE LOWER('%" . $keyword . "%')");
+        })->filterColumn('no_cut', function ($query, $keyword) {
+            $query->whereRaw("LOWER(form_cut_input.no_cut) LIKE LOWER('%" . $keyword . "%')");
+        })->filterColumn('total_ply', function ($query, $keyword) {
+            $query->whereRaw("LOWER(form_cut_input.total_ply) LIKE LOWER('%" . $keyword . "%')");
         })->order(function ($query) {
-            $query->orderBy('form_cut_input.no_cut', 'asc');
+            $query->
+                orderBy('marker_input.act_costing_ws', 'desc')->
+                orderBy('form_cut_input.no_cut_form', 'asc')->
+                orderBy('form_cut_input.waktu_selesai', 'asc')->
+                orderByRaw('FIELD(form_cut_input.tipe_form, null, "NORMAL", "MANUAL")');
         })->toJson();
     }
 
@@ -603,7 +648,7 @@ class PartController extends Controller
         $exist = [];
 
         foreach ($request->partForms as $partForm) {
-            $isExist = PartForm::where("part_id", $request->part_id)->where("form_id", $partForm['no_form'])->count();
+            $isExist = PartForm::where("part_kode", $request->part_kode)->where("no_form", $partForm['no_form'])->count();
 
             if ($isExist < 1) {
                 $lastPartForm = PartForm::select("kode")->orderBy("kode", "desc")->first();
@@ -612,8 +657,9 @@ class PartController extends Controller
 
                 $addToPartForm = PartForm::create([
                     "kode" => $kodePartForm,
-                    "part_id" => $request->part_id,
-                    "form_id" => $partForm['form_id'],
+                    "part_kode" => $request->part_kode,
+                    "no_form" => $partForm['no_form'],
+                    "created_at" => Auth::user()->username,
                     "created_at" => Carbon::now(),
                     "updated_at" => Carbon::now(),
                 ]);
@@ -639,7 +685,7 @@ class PartController extends Controller
         } else {
             return array(
                 'status' => 400,
-                'message' => 'Data tidak ditemukan',
+                'message' => 'Form tidak ditemukan',
                 'redirect' => '',
                 'table' => 'datatable-selected',
                 'additional' => ["success" => $success, "fail" => $fail, "exist" => $exist],
@@ -654,10 +700,10 @@ class PartController extends Controller
         $exist = [];
 
         foreach ($request->partForms as $partForm) {
-            $isExist = PartForm::where("part_id", $request->part_id)->where("form_id", $partForm['form_id'])->count();
+            $isExist = PartForm::where("part_kode", $request->part_kode)->where("no_form", $partForm['no_form'])->count();
 
             if ($isExist > 0) {
-                $removeCutPlan = PartForm::where("part_id", $request->part_id)->where("form_id", $partForm['form_id'])->delete();
+                $removeCutPlan = PartForm::where("part_kode", $request->part_kode)->where("no_form", $partForm['no_form'])->delete();
 
                 if ($removeCutPlan) {
                     array_push($success, ['no_form' => $partForm['no_form']]);
@@ -680,7 +726,7 @@ class PartController extends Controller
         } else {
             return array(
                 'status' => 400,
-                'message' => 'Data tidak ditemukan',
+                'message' => 'Part Form tidak ditemukan',
                 'redirect' => '',
                 'table' => 'datatable-selected',
                 'additional' => ["success" => $success, "fail" => $fail],
@@ -688,90 +734,81 @@ class PartController extends Controller
         }
     }
 
-    public function showPartForm(Request $request)
+    public function managePartSecondary(Request $request, $id = 0)
     {
-        $formCutInputs = FormCutInput::selectRaw("
-                part_detail.id part_detail_id,
-                form_cut_input.id form_cut_id,
-                form_cut_input.id_marker,
-                form_cut_input.no_form,
-                DATE(form_cut_input.waktu_selesai) tanggal_selesai,
-                users.name nama_meja,
-                marker_input.act_costing_ws,
-                marker_input.buyer,
-                marker_input.urutan_marker,
-                marker_input.style,
-                marker_input.color,
-                marker_input.panel,
-                form_cut_input.no_cut,
-                form_cut_input.total_lembar,
-                part_form.kode kode_part_form,
-                part.kode kode_part,
-                GROUP_CONCAT(DISTINCT master_part.nama_part ORDER BY master_part.nama_part ASC SEPARATOR ' || ') part_details,
-                GROUP_CONCAT(DISTINCT CONCAT(marker_input_detail.size, '(', marker_input_detail.ratio, ')') SEPARATOR ' / ') marker_details
+        $part = Part::selectRaw("
+                part.id,
+                part.kode,
+                part.buyer,
+                part.act_costing_ws,
+                part.style,
+                part.color,
+                part.panel,
+                GROUP_CONCAT(DISTINCT CONCAT(master_part.nama_part, ' - ', master_part.bagian) ORDER BY master_part.nama_part ASC SEPARATOR ', ') part_details
             ")->
-            leftJoin("part_form", "part_form.no_form", "=", "form_cut_input.no_form")->
-            leftJoin("part", "part.kode", "=", "part_form.part_kode")->
-            leftJoin("part_detail", "part_detail.part_id", "=", "part.id")->
-            leftJoin("master_part", "master_part.id", "=", "part_detail.master_part_id")->
-            leftJoin("marker_input", "marker_input.kode", "=", "form_cut_input.id_marker")->
-            leftJoin("marker_input_detail", "marker_input_detail.marker_id", "=", "marker_input.id")->
-            leftJoin("master_size_new", "master_size_new.size", "=", "marker_input_detail.size")->
-            leftJoin("users", "users.id", "=", "form_cut_input.no_meja")->
-            whereRaw("part_form.id is not null")->
-            where("part.id", $request->id)->
-            groupBy("form_cut_input.id");
+            leftJoin("part_detail", "part_detail.part_kode", "=", "part.kode")->
+            leftJoin("master_part", "master_part.kode", "part_detail.master_part_kode")->
+            where("part.id", $id)->
+            groupBy("part.id")->
+            first();
 
-        return Datatables::of($formCutInputs)->
-        filterColumn('id_marker', function ($query, $keyword) {
-            $query->whereRaw("LOWER(form_cut_input.id_marker) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('no_form', function ($query, $keyword) {
-            $query->whereRaw("LOWER(form_cut_input.no_form) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('nama_meja', function ($query, $keyword) {
-            $query->whereRaw("LOWER(users.name) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('act_costing_ws', function ($query, $keyword) {
-            $query->whereRaw("LOWER(marker_input.act_costing_ws) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('buyer', function ($query, $keyword) {
-            $query->whereRaw("LOWER(marker_input.buyer) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('style', function ($query, $keyword) {
-            $query->whereRaw("LOWER(marker_input.style) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('color', function ($query, $keyword) {
-            $query->whereRaw("LOWER(marker_input.color) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('panel', function ($query, $keyword) {
-            $query->whereRaw("LOWER(marker_input.panel) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('kode_part_form', function ($query, $keyword) {
-            $query->whereRaw("LOWER(part_form.kode) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('kode_part', function ($query, $keyword) {
-            $query->whereRaw("LOWER(part.kode) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('nama_part', function ($query, $keyword) {
-            $query->whereRaw("LOWER(master_part.nama_part) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('no_cut', function ($query, $keyword) {
-            $query->whereRaw("LOWER(form_cut_input.no_cut) LIKE LOWER('%" . $keyword . "%')");
-        })->filterColumn('total_lembar', function ($query, $keyword) {
-            $query->whereRaw("LOWER(form_cut_input.total_lembar) LIKE LOWER('%" . $keyword . "%')");
-        })->order(function ($query) {
-            $query->orderBy('marker_input.act_costing_ws', 'desc')->orderBy('form_cut_input.no_cut', 'asc')->orderBy('form_cut_input.waktu_selesai', 'asc')->orderByRaw('FIELD(form_cut_input.tipe_form_cut, null, "NORMAL", "MANUAL")');
-        })->toJson();
+        $masterParts = MasterPart::all();
+        $masterTujuan = MasterTujuan::all();
+        $masterSecondary = MasterSecondary::all();
+
+        return view("marker.part.manage-part-secondary", ["part" => $part, "masterParts" => $masterParts, "masterTujuan" => $masterTujuan, "page" => "dashboard-marker",  "subPageGroup" => "proses-marker", "subPage" => "part"]);
     }
 
-    public function datatable_list_part(Request $request)
+    public function showPartList(Request $request)
     {
-        $list_part = DB::select(
+        $partList = DB::select(
             "
-            SELECT pd.id,
-            CONCAT(nama_part, ' - ', bag) nama_part,
-            master_secondary_id,
-            ms.tujuan,
-            ms.proses,
-            cons,
-            UPPER(unit) unit
-            FROM `part_detail` pd
-            inner join master_part mp on pd.master_part_id = mp.id
-            left join master_secondary ms on pd.master_secondary_id = ms.id
-            where part_id = '" . $request->id . "'
+            SELECT
+                pd.id,
+                pd.cons_part,
+                UPPER(pd.unit_cons_part) unit_cons_part,
+                CONCAT(mp.nama_part, ' - ', mp.bagian) nama_part,
+                ms.kode,
+                ms.tujuan,
+                ms.proses
+            FROM
+                part_detail pd
+            inner join master_part mp on pd.master_part_kode = mp.kode
+            left join master_secondary ms on pd.master_secondary_kode = ms.kode
+            where
+                part_kode = '" . $request->kode . "'
             "
         );
 
-        return DataTables::of($list_part)->toJson();
+        return DataTables::of($partList)->toJson();
+    }
+
+    public function storePartSecondary(Request $request)
+    {
+        $validatedRequest = $request->validate([
+            "kode" => "required",
+            "part" => "required",
+            "cons" => "required",
+            "tujuan" => "required",
+            "proses" => "required",
+        ]);
+
+        $upsertPartDetail = PartDetail::updateOrCreate(['part_kode' => $request->kode, 'master_part_kode' => $validatedRequest['part']],[
+            'master_secondary_kode' => $validatedRequest['proses'],
+            'cons_part' => $validatedRequest['cons'],
+            'unit_cons_part' => 'METER',
+            'created_by' => Auth::user()->username,
+        ]);
+
+        if ($upsertPartDetail) {
+            return array(
+                'icon' => 'success',
+                'message' => 'Data Part "' . $validatedRequest['part'] . '" berhasil diupdate',
+            );
+        }
+        return array(
+            'icon' => 'fail',
+            'message' => 'Data Part "' . $validatedRequest['part'] . '" berhasil diupdate',
+        );
     }
 }

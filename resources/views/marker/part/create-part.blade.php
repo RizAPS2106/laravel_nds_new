@@ -1,23 +1,13 @@
 @extends('layouts.index')
 
-@section('custom-link')
-    <!-- DataTables -->
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
-    <!-- Select2 -->
-    <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
-@endsection
-
 @section('content')
-    <form action="{{ route('store-part') }}" method="post" id="store-part" onsubmit="submitPartForm(this, event)">
+    <form action="{{ route('store-part') }}" method="post" id="store-part" onsubmit="submitForm(this, event)">
         @csrf
         <div class="card card-sb">
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="card-title fw-bold">
-                        Tambah Data Part
+                        <i class="fas fa-th fa-sm"></i> Tambah Data Part
                     </h5>
                     <a href="{{ route('part') }}" class="btn btn-sm btn-primary">
                         <i class="fa fa-reply"></i> Kembali ke Part
@@ -30,7 +20,7 @@
                         <div class="mb-1">
                             <div class="form-group">
                                 <label><small>No. WS</small></label>
-                                <select class="form-control select2bs4" id="ws_id" name="ws_id" style="width: 100%;">
+                                <select class="form-control select2bs4" id="act_costing_id" name="act_costing_id">
                                     <option selected="selected" value="">Pilih WS</option>
                                     @foreach ($orders as $order)
                                         <option value="{{ $order->id }}">
@@ -56,21 +46,20 @@
                     <div class="col-6 col-md-3">
                         <div class="mb-1">
                             <div class="form-group">
-                                <label><small>Panel</small></label>
+                                <label class="form-label"><small>Panel</small></label>
                                 <select class="form-control select2bs4" id="panel" name="panel" style="width: 100%;" >
                                     <option selected="selected" value="">Pilih Panel</option>
-                                    {{-- select 2 option --}}
                                 </select>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="row">
-                    <input type="hidden" class="form-control" id="ws" name="ws" readonly>
+                    <input type="hidden" class="form-control" id="act_costing_ws" name="act_costing_ws" readonly>
                     <div class="col-12 col-md-12">
                         <div class="mb-1">
                             <div class="form-group">
-                                <label><small>Color</small></label>
+                                <label class="form-label"><small>Color</small></label>
                                 <input type="text" class="form-control" name="color" id="color" readonly>
                             </div>
                         </div>
@@ -79,10 +68,10 @@
                         <div class="row">
                             <div class="col-3">
                                 <label class="form-label"><small>Part</small></label>
-                                <select class="form-control select2bs4" name="part_details[0]" id="part_details_0">
+                                <select class="form-control select2bs4" name="part[0]" id="part_0">
                                     <option value="">Pilih Part</option>
-                                    @foreach ($masterParts as $masterPart)
-                                        <option value="{{ $masterPart->id }}" data-index="0">{{ $masterPart->nama_part }} - {{ $masterPart->bag }}</option>
+                                    @foreach ($masterParts as $part)
+                                        <option value="{{ $part->kode }}" data-index="0">{{ $part->nama_part }} - {{ $part->bagian }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -93,7 +82,7 @@
                                         <input type="number" class="form-control" style="border-radius: 3px 0 0 3px;" name="cons[0]" id="cons_0" step="0.001">
                                     </div>
                                     <div style="width: 50%;">
-                                        <select class="form-select" style="border-radius: 0 3px 3px 0;" name="cons_unit[0]" id="cons_unit_0">
+                                        <select class="form-select" style="border-radius: 0 3px 3px 0;" name="unit_cons[0]" id="unit_cons_0">
                                             <option value="meter">METER</option>
                                             <option value="yard">YARD</option>
                                             <option value="kgm">KGM</option>
@@ -106,7 +95,7 @@
                                 <select class="form-control select2bs4" style="border-radius: 0 3px 3px 0;" name="tujuan[0]" id="tujuan_0">
                                     <option value="">Pilih Tujuan</option>
                                     @foreach ($masterTujuan as $tujuan)
-                                        <option value="{{ $tujuan->id }}">{{ $tujuan->tujuan }}</option>
+                                        <option value="{{ $tujuan->kode }}">{{ $tujuan->tujuan }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -115,7 +104,7 @@
                                 <select class="form-control select2bs4" style="border-radius: 0 3px 3px 0;" name="proses[0]" id="proses_0" data-index="0" onchange="changeTujuan(this)">
                                     <option value="">Pilih Proses</option>
                                     @foreach ($masterSecondary as $secondary)
-                                        <option value="{{ $secondary->id }}" data-tujuan="{{ $secondary->id_tujuan }}">{{ $secondary->proses }}</option>
+                                        <option value="{{ $secondary->kode }}" data-tujuan="{{ $secondary->tujuan_kode }}">{{ $secondary->proses }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -135,13 +124,6 @@
 @endsection
 
 @section('custom-script')
-    <!-- DataTables  & Plugins -->
-    <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
-    <!-- Select2 -->
-    <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
     <script>
         // Global Variable
         var sumCutQty = null;
@@ -155,6 +137,7 @@
 
         var jumlahPartDetail = null;
 
+        // Loading
         document.getElementById('loading').classList.remove("d-none");
 
         // Initial Window On Load Event
@@ -167,8 +150,8 @@
                 $(".select2bs4").val('').trigger('change');
                 $(".select2bs4custom").val('').trigger('change');
 
-                $("#ws_id").val(null).trigger("change");
-                $('#part_details').val(null).trigger('change');
+                $("#act_costing_id").val(null).trigger("change");
+                $('#part').val(null).trigger('change');
 
                 await getMasterParts();
                 await getTujuan();
@@ -183,6 +166,7 @@
             // Select2 Prevent Step-Jump Input ( Step = WS -> Panel )
             $("#panel").prop("disabled", true);
 
+            // Loading End
             document.getElementById('loading').classList.add("d-none");
         });
 
@@ -200,7 +184,7 @@
         });
 
         // Step One (WS) on change event
-        $('#ws_id').on('change', function(e) {
+        $('#act_costing_id').on('change', function(e) {
             if (this.value) {
                 updateOrderInfo();
                 updatePanelList();
@@ -210,15 +194,15 @@
         // Update Order Information Based on Order WS and Order Color
         function updateOrderInfo() {
             return $.ajax({
-                url: '{{ route("get-part-order") }}',
+                url: '{{ route("get-general-order") }}',
                 type: 'get',
                 data: {
-                    act_costing_id: $('#ws_id').val(),
+                    act_costing_id: $('#act_costing_id').val(),
                 },
                 dataType: 'json',
                 success: function (res) {
                     if (res) {
-                        document.getElementById('ws').value = res.kpno;
+                        document.getElementById('act_costing_ws').value = res.kpno;
                         document.getElementById('buyer').value = res.buyer;
                         document.getElementById('style').value = res.styleno;
                         document.getElementById('color').value = res.colors;
@@ -231,10 +215,10 @@
         function updatePanelList() {
             document.getElementById('panel').value = null;
             return $.ajax({
-                url: '{{ route("get-part-panels") }}',
+                url: '{{ route("get-general-panels") }}',
                 type: 'get',
                 data: {
-                    act_costing_id: $('#ws_id').val(),
+                    act_costing_id: $('#act_costing_id').val(),
                     color: $('#color').val(),
                 },
                 success: function (res) {
@@ -281,7 +265,7 @@
 
         function getProses() {
             return $.ajax({
-                url: '{{ route("get-master-secondary") }}',
+                url: '{{ route("get-master-secondaries") }}',
                 type: 'get',
                 success: function (res) {
                     if (res) {
@@ -319,8 +303,8 @@
 
             let partDetail = document.createElement("select");
             partDetail.setAttribute('class', 'form-select select2bs4custom');
-            partDetail.setAttribute('name', 'part_details['+jumlahPartDetail.value+']');
-            partDetail.setAttribute('id', 'part_details_'+jumlahPartDetail.value);
+            partDetail.setAttribute('name', 'part['+jumlahPartDetail.value+']');
+            partDetail.setAttribute('id', 'part_'+jumlahPartDetail.value);
             partDetail.innerHTML = partOptions;
 
             divCol1.appendChild(label1);
@@ -337,7 +321,7 @@
                         <input type="number" class="form-control" style="border-radius: 3px 0 0 3px;" name="cons[`+jumlahPartDetail.value+`]" id="cons_`+jumlahPartDetail.value+`" step="0.001">
                     </div>
                     <div style="width: 50%;">
-                        <select class="form-select" style="border-radius: 0 3px 3px 0;" name="cons_unit[`+jumlahPartDetail.value+`]" id="cons_unit_`+jumlahPartDetail.value+`">
+                        <select class="form-select" style="border-radius: 0 3px 3px 0;" name="unit_cons[`+jumlahPartDetail.value+`]" id="unit_cons_`+jumlahPartDetail.value+`">
                             <option value="meter">METER</option>
                             <option value="yard">YARD</option>
                             <option value="kgm">KGM</option>
@@ -390,7 +374,7 @@
 
             partSection.appendChild(divRow);
 
-            $('#part_details_'+jumlahPartDetail.value).select2({
+            $('#part_'+jumlahPartDetail.value).select2({
                 theme: 'bootstrap4',
             });
             $('#tujuan_'+jumlahPartDetail.value).select2({
@@ -411,113 +395,10 @@
             }
         }
 
-        // Submit Part Form
-        function submitPartForm(e, evt) {
-            document.getElementById('submit-button').setAttribute('disabled', true);
-
-            evt.preventDefault();
-
-            clearModified();
-
-            $.ajax({
-                url: e.getAttribute('action'),
-                type: e.getAttribute('method'),
-                data: new FormData(e),
-                processData: false,
-                contentType: false,
-                success: async function(res) {
-                    document.getElementById('submit-button').removeAttribute('disabled');
-
-                    // Success Response
-
-                    if (res.status == 200) {
-                        // When Actually Success :
-
-                        // Reset This Form
-                        e.reset();
-
-                        // Success Alert
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Data Part Berhasil disimpan',
-                            text: res.message,
-                            showCancelButton: false,
-                            showConfirmButton: true,
-                            confirmButtonText: 'Oke',
-                            timer: 5000,
-                            timerProgressBar: true
-                        }).then(() => {
-                            if (res.redirect != '') {
-                                if (res.redirect != 'reload') {
-                                    location.href = res.redirect;
-                                } else {
-                                    location.reload();
-                                }
-                            }
-                        })
-                    } else {
-                        // When Actually Error :
-
-                        // Error Alert
-                        iziToast.error({
-                            title: 'Error',
-                            message: res.message,
-                            position: 'topCenter'
-                        });
-                    }
-
-                    // If There Are Some Additional Error
-                    if (Object.keys(res.additional).length > 0 ) {
-                        for (let key in res.additional) {
-                            if (document.getElementById(key)) {
-                                document.getElementById(key).classList.add('is-invalid');
-
-                                if (res.additional[key].hasOwnProperty('message')) {
-                                    document.getElementById(key+'_error').classList.remove('d-none');
-                                    document.getElementById(key+'_error').innerHTML = res.additional[key]['message'];
-                                }
-
-                                if (res.additional[key].hasOwnProperty('value')) {
-                                    document.getElementById(key).value = res.additional[key]['value'];
-                                }
-
-                                modified.push(
-                                    [key, '.classList', '.remove(', "'is-invalid')"],
-                                    [key+'_error', '.classList', '.add(', "'d-none')"],
-                                    [key+'_error', '.innerHTML = ', "''"],
-                                )
-                            }
-                        }
-                    }
-                }, error: function (jqXHR) {
-                    document.getElementById('submit-button').removeAttribute('disabled');
-
-                    // Error Response
-
-                    let res = jqXHR.responseJSON;
-                    let message = '';
-                    let i = 0;
-
-                    for (let key in res.errors) {
-                        message = res.errors[key];
-                        document.getElementById(key).classList.add('is-invalid');
-                        modified.push(
-                            [key, '.classList', '.remove(', "'is-invalid')"],
-                        )
-
-                        if (i == 0) {
-                            document.getElementById(key).focus();
-                            i++;
-                        }
-                    };
-                }
-            });
-        }
-
         // Reset Step
         async function resetStep() {
-            $('#part_details').val(null).trigger('change');
-            await $("#ws_id").val(null).trigger("change");
+            $('#part').val(null).trigger('change');
+            await $("#act_costing_id").val(null).trigger("change");
             await $("#panel").val(null).trigger("change");
             await $("#panel").prop("disabled", true);
         }
