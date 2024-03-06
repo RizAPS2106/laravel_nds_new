@@ -1,11 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Cutting;
+
+use Illuminate\Http\Request;
+
+use App\Http\Controllers;
 
 use App\Exports\ExportLaporanPemakaian;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Http\Request;
+
 use Yajra\DataTables\Facades\DataTables;
+use Maatwebsite\Excel\Facades\Excel;
 use DB;
 
 class LapPemakaianController extends Controller

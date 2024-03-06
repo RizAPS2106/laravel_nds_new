@@ -1,19 +1,23 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Cutting;
 
+use Illuminate\Http\Request;
+
+use App\Http\Controllers\Controller;
+
+use App\Models\Marker;
+use App\Models\MarkerDetail;
 use App\Models\CutPlan;
 use App\Models\FormCutInput;
 use App\Models\FormCutInputDetail;
 use App\Models\FormCutInputDetailLap;
-use App\Models\MarkerDetail;
-use App\Models\Marker;
 use App\Models\Stocker;
 use App\Models\StockerDetail;
 use App\Models\User;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
+
 use Yajra\DataTables\Facades\DataTables;
+use Carbon\Carbon;
 use DB;
 
 class SpreadingController extends Controller

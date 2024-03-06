@@ -1,13 +1,17 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Cutting;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+
+use App\Http\Controllers\Controller;
+
 use App\Models\User;
 use App\Models\CutPlan;
 use App\Models\FormCutInput;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
+
 use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
 use DB;
