@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Stocker;
 
 use Illuminate\Http\Request;
+
 use App\Models\LoadingLinePlan;
 use App\Models\SignalBit\UserLine;
+
 use Yajra\DataTables\Facades\DataTables;
 use DB;
 

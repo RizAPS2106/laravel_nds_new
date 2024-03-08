@@ -1,11 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Stocker;
+
+use App\Http\Controllers\Controller;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\Rack;
 use App\Models\RackDetail;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+
 use Carbon\Carbon;
 use Yajra\DataTables\Facades\DataTables;
 use QrCode;

@@ -1,6 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Stocker;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\Trolley;
 use App\Models\TrolleyStocker;
@@ -8,9 +14,7 @@ use App\Models\Stocker;
 use App\Models\LoadingLine;
 use App\Models\LoadingLinePlan;
 use App\Models\SignalBit\UserLine;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
+
 use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
 use DB;

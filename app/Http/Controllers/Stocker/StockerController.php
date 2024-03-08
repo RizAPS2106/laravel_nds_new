@@ -1,6 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Stocker;
+
+use Illuminate\Http\Request;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\Stocker;
 use App\Models\StockerDetail;
@@ -10,12 +14,12 @@ use App\Models\FormCutInputDetailLap;
 use App\Models\Marker;
 use App\Models\MarkerDetail;
 use App\Models\PartDetail;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
+
 use Yajra\DataTables\Facades\DataTables;
-use DB;
+use Carbon\Carbon;
 use QrCode;
 use PDF;
+use DB;
 
 class StockerController extends Controller
 {

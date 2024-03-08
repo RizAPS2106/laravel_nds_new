@@ -1,18 +1,20 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Stocker;
 
 use Illuminate\Http\Request;
-use Carbon\Carbon;
-use Yajra\DataTables\Facades\DataTables;
-use App\Exports\ExportLaporanMutasiKaryawan;
-use App\Models\RackDetailStocker;
-use App\Models\SecondaryIn;
-use Maatwebsite\Excel\Facades\Excel;
-use DB;
 use Illuminate\Support\Facades\Auth;
 
-class SecondaryInController extends Controller
+use App\Http\Controllers\Controller;
+
+use App\Models\SecondaryInhouse;
+
+use Yajra\DataTables\Facades\DataTables;
+use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
+use DB;
+
+class SecondaryInhouseController extends Controller
 {
     public function index(Request $request)
     {
@@ -45,42 +47,50 @@ class SecondaryInController extends Controller
             }
 
             $data_input = DB::select("
-            SELECT a.id_qr_stocker,
+            SELECT a.*,
             DATE_FORMAT(a.tgl_trans, '%d-%m-%Y') tgl_trans_fix,
             s.act_costing_ws,
             s.color,
             p.buyer,
             p.style,
-            dc.tujuan,
-            dc.lokasi,
-            s.lokasi lokasi_rak,
             a.qty_awal,
             a.qty_reject,
             a.qty_replace,
             a.qty_in,
             a.created_at,
-            a.user
-            from secondary_in_input a
+            dc.tujuan,
+            dc.lokasi,
+            dc.tempat,
+            user
+            from secondary_inhouse_input a
             inner join stocker_input s on a.id_qr_stocker = s.id_qr_stocker
             inner join part_detail pd on s.part_detail_id = pd.id
             inner join part p on pd.part_id = p.id
-						left join dc_in_input dc on a.id_qr_stocker = dc.id_qr_stocker
-						left join secondary_inhouse_input sii on a.id_qr_stocker = sii.id_qr_stocker
+            inner join (select id_qr_stocker,tujuan, lokasi, tempat from dc_in_input) dc on a.id_qr_stocker = dc.id_qr_stocker
             order by a.tgl_trans desc
             ");
 
             return DataTables::of($data_input)->toJson();
         }
-        return view('secondary-in.secondary-in', ['page' => 'dashboard-dc', "subPageGroup" => "secondary-dc", "subPage" => "secondary-in", "data_rak" => $data_rak], ['tgl_skrg' => $tgl_skrg]);
+        return view('secondary-inhouse.secondary-inhouse', ['page' => 'dashboard-dc', "subPageGroup" => "secondary-dc", "subPage" => "secondary-inhouse", "data_rak" => $data_rak], ['tgl_skrg' => $tgl_skrg]);
     }
 
-    public function detail_stocker_in(Request $request)
+
+    public function detail_stocker_inhouse(Request $request)
     {
         $tgl_skrg = Carbon::now()->isoFormat('D MMMM Y hh:mm:ss');
         $tglskrg = date('Y-m-d');
+        // dd($data_rak);
         if ($request->ajax()) {
             $additionalQuery = '';
 
+            // if ($request->dateFrom) {
+            //     $additionalQuery .= " and a.tgl_form_cut >= '" . $request->dateFrom . "' ";
+            // }
+
+            // if ($request->dateTo) {
+            //     $additionalQuery .= " and a.tgl_form_cut <= '" . $request->dateTo . "' ";
+            // }
 
             $keywordQuery = '';
             if ($request->search['value']) {
@@ -94,72 +104,51 @@ class SecondaryInController extends Controller
                 ";
             }
 
-            $data_input = DB::select("
-            select s.act_costing_ws, buyer,s.color,styleno, dc.qty_awal - dc.qty_reject + dc.qty_replace qty_in, si.qty_in qty_out, dc.qty_awal - dc.qty_reject + dc.qty_replace -  si.qty_in balance, dc.tujuan,dc.lokasi
-            from dc_in_input dc
-            inner join stocker_input s on dc.id_qr_stocker = s.id_qr_stocker
-            inner join master_sb_ws m on s.so_det_id = m.id_so_det
-            left join secondary_in_input si on dc.id_qr_stocker = si.id_qr_stocker
-            where dc.tujuan = 'SECONDARY LUAR' and dc.qty_awal - dc.qty_reject + dc.qty_replace -  si.qty_in != '0'
-            group by dc.lokasi
-            union
-            select s.act_costing_ws, buyer,s.color,  styleno , sii.qty_in qty_in, si.qty_in qty_out,sii.qty_in - si.qty_in balance, dc.tujuan, dc.lokasi
-            from dc_in_input dc
+            $data_detail = DB::select("
+            select s.act_costing_ws, buyer,s.color,  styleno, sum(sii.qty_in) qty_out, sum(dc.qty_awal - dc.qty_reject + dc.qty_replace) qty_in,sum(sii.qty_in) - sum(dc.qty_awal - dc.qty_reject + dc.qty_replace) balance, dc.lokasi from dc_in_input dc
             inner join stocker_input s on dc.id_qr_stocker = s.id_qr_stocker
             inner join master_sb_ws m on s.so_det_id = m.id_so_det
             left join secondary_inhouse_input sii on dc.id_qr_stocker = sii.id_qr_stocker
-            left join secondary_in_input si on dc.id_qr_stocker = si.id_qr_stocker
-            where dc.tujuan = 'SECONDARY DALAM'
-            group by dc.lokasi
+            where dc.tujuan = 'SECONDARY DALAM' group by dc.lokasi
             having sum(sii.qty_in) - sum(dc.qty_awal - dc.qty_reject + dc.qty_replace) != '0'
             ");
 
-            return DataTables::of($data_input)->toJson();
+            return DataTables::of($data_detail)->toJson();
         }
-        return view('secondary-in.secondary-in', ['page' => 'dashboard-dc', "subPageGroup" => "secondary-dc", "subPage" => "secondary-in"], ['tgl_skrg' => $tgl_skrg]);
+        return view('secondary-inhouse.secondary-inhouse', ['page' => 'dashboard-dc', "subPageGroup" => "secondary-dc", "subPage" => "secondary-inhouse"], ['tgl_skrg' => $tgl_skrg]);
     }
 
 
-    public function cek_data_stocker_in(Request $request)
+
+    public function cek_data_stocker_inhouse(Request $request)
     {
         $cekdata =  DB::select("
-        select
-        s.id_qr_stocker,
+        SELECT
+        dc.id_qr_stocker,
         s.act_costing_ws,
         buyer,
         no_cut,
         style,
         s.color,
         s.size,
+        mp.nama_part,
         dc.tujuan,
         dc.lokasi,
-        mp.nama_part,
-        if(dc.tujuan = 'SECONDARY LUAR',dc.qty_awal, si.qty_awal) qty_awal,
-        s.lokasi lokasi_rak
-        from
-        (
-        select dc.id_qr_stocker,ifnull(si.id_qr_stocker,'x') cek_1, ifnull(sii.id_qr_stocker,'x') cek_2  from dc_in_input dc
-        left join secondary_inhouse_input si on dc.id_qr_stocker = si.id_qr_stocker
-        left join secondary_in_input sii on dc.id_qr_stocker = sii.id_qr_stocker
-        where dc.tujuan = 'SECONDARY DALAM' and
-        ifnull(si.id_qr_stocker,'x') != 'x' and ifnull(sii.id_qr_stocker,'x') = 'x'
-        union
-        select dc.id_qr_stocker, 'x' cek_1, if(sii.id_qr_stocker is null ,dc.id_qr_stocker,'x') cek_2  from dc_in_input dc
-        left join secondary_in_input sii on dc.id_qr_stocker = sii.id_qr_stocker
-        where dc.tujuan = 'SECONDARY LUAR'	and	if(sii.id_qr_stocker is null ,dc.id_qr_stocker,'x') != 'x'
-        ) md
-        inner join stocker_input s on md.id_qr_stocker = s.id_qr_stocker
+        s.qty_ply - dc.qty_reject + dc.qty_replace qty_awal,
+        ifnull(si.id_qr_stocker,'x')
+        from dc_in_input dc
+        inner join stocker_input s on dc.id_qr_stocker = s.id_qr_stocker
         inner join form_cut_input a on s.form_cut_id = a.id
         inner join part_detail p on s.part_detail_id = p.id
         inner join master_part mp on p.master_part_id = mp.id
         inner join marker_input mi on a.id_marker = mi.kode
-        left join dc_in_input dc on s.id_qr_stocker = dc.id_qr_stocker
-        left join secondary_inhouse_input si on s.id_qr_stocker = si.id_qr_stocker
-        where s.id_qr_stocker =     '" . $request->txtqrstocker . "'
+        left join secondary_inhouse_input si on dc.id_qr_stocker = si.id_qr_stocker
+        where dc.id_qr_stocker =  '" . $request->txtqrstocker . "' and dc.tujuan = 'SECONDARY DALAM'
+        and ifnull(si.id_qr_stocker,'x') = 'x'
         ");
         return json_encode($cekdata[0]);
+        dd($cekdata);
     }
-
 
 
     // public function get_rak(Request $request)
@@ -185,25 +174,10 @@ class SecondaryInController extends Controller
         $timestamp = Carbon::now();
 
         $validatedRequest = $request->validate([
-            "cborak" => "required",
             "txtqtyreject" => "required"
         ]);
 
-        $rak = DB::table('rack_detail')
-            ->select('id')
-            ->where('nama_detail_rak', '=', $validatedRequest['cborak'])
-            ->get();
-        $rak_data = $rak ? $rak[0]->id : null;
-
-        $insert_rak = RackDetailStocker::create([
-            'nm_rak' => $validatedRequest['cborak'],
-            'detail_rack_id' => $rak_data,
-            'stocker_id' => $request['txtno_stocker'],
-            'qty_in' => $request['txtqtyin'],
-            'created_at' => $timestamp,
-            'updated_at' => $timestamp,
-        ]);
-        $saveinhouse = SecondaryIn::create([
+        $saveinhouse = SecondaryInhouse::create([
             'tgl_trans' => $tgltrans,
             'id_qr_stocker' => $request['txtno_stocker'],
             'qty_awal' => $request['txtqtyawal'],
@@ -216,9 +190,11 @@ class SecondaryInController extends Controller
             'updated_at' => $timestamp,
         ]);
 
+
         DB::update(
-            "update stocker_input set status = 'non secondary' where id_qr_stocker = '" . $request->txtno_stocker . "'"
+            "update stocker_input set status = 'secondary' where id_qr_stocker = '" . $request->txtno_stocker . "'"
         );
+
         // dd($savemutasi);
         // $message .= "$tglpindah <br>";
 

@@ -1,13 +1,17 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Stocker;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\Stocker;
 use App\Models\Part;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+
 use Yajra\DataTables\Facades\DataTables;
+use Carbon\Carbon;
 
 class StockDcWipController extends Controller
 {
