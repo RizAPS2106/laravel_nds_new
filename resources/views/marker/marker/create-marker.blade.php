@@ -28,14 +28,14 @@
                     <div class="col-6 col-md-3">
                         <div class="mb-1">
                             <label class="form-label"><small>Tanggal</small></label>
-                            <input type="date" class="form-control" id="tgl_cutting" name="tgl_cutting" value="{{ date('Y-m-d') }}">
+                            <input type="date" class="form-control" id="tanggal" name="tanggal" value="{{ date('Y-m-d') }}">
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
                         <div class="mb-1">
                             <div class="form-group">
                                 <label><small>No. WS</small></label>
-                                <select class="form-control select2bs4" id="ws_id" name="ws_id" style="width: 100%;">
+                                <select class="form-control select2bs4" id="act_costing_id" name="act_costing_id" style="width: 100%;">
                                     <option selected="selected" value="">Pilih WS</option>
                                     @foreach ($orders as $order)
                                         <option value="{{ $order->id }}">
@@ -72,7 +72,7 @@
                 <div class="row">
                     <div class="col-12 col-md-6">
                         <div class="d-flex flex-column">
-                            <input type="hidden" class="form-control" id="ws" name="ws" readonly>
+                            <input type="hidden" class="form-control" id="act_costing_ws" name="act_costing_ws" readonly>
                             <div class="mb-1">
                                 <label class="form-label"><small>Buyer</small></label>
                                 <input type="text" class="form-control" id="buyer" name="buyer" readonly>
@@ -152,7 +152,7 @@
                     <div class="col-md-3">
                         <div class="mb-1">
                             <label class="form-label"><small>No. Urut Marker</small></label>
-                            <input type="text" class="form-control" id="no_urut_marker" name="no_urut_marker" readonly>
+                            <input type="text" class="form-control" id="urutan_marker" name="urutan_marker" readonly>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -242,7 +242,7 @@
         // Initial Window On Load Event
         $(document).ready(async function () {
             // Call Get Total Cut Qty ( set sum cut qty variable )
-            getTotalCutQty($("#ws_id").val(), $("#color").val(), $("#panel").val());
+            getTotalCutQty($("#act_costing_id").val(), $("#color").val(), $("#panel").val());
 
             // Marker Type Default Value
             $("#tipe_marker").val("regular marker");
@@ -251,7 +251,7 @@
             if (document.getElementById('store-marker')) {
                 document.getElementById('store-marker').reset();
 
-                $("#ws_id").val(null).trigger("change");
+                $("#act_costing_id").val(null).trigger("change");
             }
 
             // Select2 Prevent Step-Jump Input ( Step = WS -> Color -> Panel )
@@ -287,7 +287,7 @@
         }
 
         // Step One (WS) on change event
-        $('#ws_id').on('change', function(e) {
+        $('#act_costing_id').on('change', function(e) {
             if (this.value) {
                 updateColorList();
                 updateOrderInfo();
@@ -314,10 +314,10 @@
         // Update Order Information Based on Order WS and Order Color
         function updateOrderInfo() {
             return $.ajax({
-                url: '{{ route("get-marker-order") }}',
+                url: '{{ route("get-general-order") }}',
                 type: 'get',
                 data: {
-                    act_costing_id: $('#ws_id').val(),
+                    act_costing_id: $('#act_costing_id').val(),
                     color: $('#color').val(),
                 },
                 dataType: 'json',
@@ -336,10 +336,10 @@
             document.getElementById('color').value = null;
 
             return $.ajax({
-                url: '{{ route("get-marker-colors") }}',
+                url: '{{ route("get-general-colors") }}',
                 type: 'get',
                 data: {
-                    act_costing_id: $('#ws_id').val(),
+                    act_costing_id: $('#act_costing_id').val(),
                 },
                 success: function (res) {
                     if (res) {
@@ -357,7 +357,7 @@
                         $("#panel").prop("disabled", true);
 
                         // Reset order information
-                        document.getElementById('no_urut_marker').value = null;
+                        document.getElementById('urutan_marker').value = null;
                         document.getElementById('cons_ws').value = null;
                         document.getElementById('order_qty').value = null;
                     }
@@ -369,10 +369,10 @@
         function updatePanelList() {
             document.getElementById('panel').value = null;
             return $.ajax({
-                url: '{{ route("get-marker-panels") }}',
+                url: '{{ route("get-general-panels") }}',
                 type: 'get',
                 data: {
-                    act_costing_id: $('#ws_id').val(),
+                    act_costing_id: $('#act_costing_id').val(),
                     color: $('#color').val(),
                 },
                 success: function (res) {
@@ -384,7 +384,7 @@
                         $("#panel").prop("disabled", false);
 
                         // Reset order information
-                        document.getElementById('no_urut_marker').value = null;
+                        document.getElementById('urutan_marker').value = null;
                         document.getElementById('cons_ws').value = null;
                         document.getElementById('order_qty').value = null;
                     }
@@ -409,9 +409,9 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: '{{ route("get-marker-sizes") }}',
+                url: '{{ route("get-general-sizes") }}',
                 data: function (d) {
-                    d.act_costing_id = $('#ws_id').val();
+                    d.act_costing_id = $('#act_costing_id').val();
                     d.color = $('#color').val();
                 },
             },
@@ -568,18 +568,18 @@
 
         // Get & Set Marker Count Based on Order WS, Order Color and Order Panel
         function getMarkerCount() {
-            document.getElementById('no_urut_marker').value = "";
+            document.getElementById('urutan_marker').value = "";
             return $.ajax({
                 url: '{{ route("get-marker-count") }}',
                 type: 'get',
                 data: {
-                    act_costing_id: $('#ws_id').val(),
+                    act_costing_id: $('#act_costing_id').val(),
                     color: $('#color').val(),
                     panel: $('#panel').val()
                 },
                 success: function (res) {
                     if (res) {
-                        document.getElementById('no_urut_marker').value = res;
+                        document.getElementById('urutan_marker').value = res;
                     }
                 }
             });
@@ -590,11 +590,11 @@
             document.getElementById('cons_ws').value = null;
             document.getElementById('order_qty').value = null;
             return $.ajax({
-                url: ' {{ route("get-marker-number") }}',
+                url: ' {{ route("get-general-number") }}',
                 type: 'get',
                 dataType: 'json',
                 data: {
-                    act_costing_id: $('#ws_id').val(),
+                    act_costing_id: $('#act_costing_id').val(),
                     color: $('#color').val(),
                     panel: $('#panel').val()
                 },
@@ -714,7 +714,7 @@
                         })
 
                         // Call Get Total Cut Qty ( update sum cut qty variable )
-                        getTotalCutQty($("#ws_id").val(), $("#color").val(), $("#panel").val());
+                        getTotalCutQty($("#act_costing_id").val(), $("#color").val(), $("#panel").val());
 
                         // Reset Step ( back to step one )
                         resetStep();
@@ -780,7 +780,7 @@
 
         // Reset Step
         async function resetStep() {
-            await $("#ws_id").val(null).trigger("change");
+            await $("#act_costing_id").val(null).trigger("change");
             await $("#color").val(null).trigger("change");
             await $("#panel").val(null).trigger("change");
             await $("#color").prop("disabled", true);

@@ -202,8 +202,7 @@
                                 <a href='{{ route('manage-part-form') }}/` + row['id'] + `' class='btn btn-success btn-sm'>
                                     <i class='fa fa-cog'></i>
                                 </a>
-                                <a class='btn btn-danger btn-sm' data='` + JSON.stringify(row) +
-                            `' data-url='{{ route('destroy-part') }}/` + row['id'] + `' onclick='deleteData(this)'>
+                                <a class='btn btn-danger btn-sm' data='` + JSON.stringify(row) + `' data-url='{{ route('destroy-part') }}/` + row['id'] + `' onclick='deleteData(this)'>
                                     <i class='fa fa-trash'></i>
                                 </a>
                             </div>
@@ -248,7 +247,7 @@
         // Part Datatable Header Column Filter
         $('#datatable-part thead tr').clone(true).appendTo('#datatable-part thead');
         $('#datatable-part thead tr:eq(1) th').each(function(i) {
-            if (i == 1 || i == 2 || i == 3 || i == 4 || i == 5 || i == 6 || i == 7 || i == 8) {
+            if (i == 1 || i == 2 || i == 3 || i == 4 || i == 5 || i == 6) {
                 var title = $(this).text();
                 $(this).html('<input type="text" class="form-control form-control-sm" />');
 

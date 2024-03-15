@@ -88,8 +88,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/get-panels', 'getPanelList')->name('get-general-panels');
         // get sizes
         Route::get('/get-sizes', 'getSizeList')->name('get-general-sizes');
-        // get count
-        Route::get('/get-count', 'getCount')->name('get-general-count');
         // get number
         Route::get('/get-number', 'getNumber')->name('get-general-number');
     });
@@ -131,7 +129,7 @@ Route::middleware('auth')->group(function () {
             // part secondary
             Route::get('/manage-part-secondary/{id?}', 'managePartSecondary')->name('manage-part-secondary');
             Route::get('/show-part-list/{id?}', 'showPartList')->name('show-part-list');
-            Route::post('/store-part-secondary', 'store-part-secondary')->name('store-part-secondary');
+            Route::post('/store-part-secondary', 'storePartSecondary')->name('store-part-secondary');
 
             // get order
             Route::get('/get-order', 'getOrderInfo')->name('get-part-order');
@@ -158,6 +156,9 @@ Route::middleware('auth')->group(function () {
             Route::get('/edit/{id?}', 'edit')->name('edit-marker');
             Route::put('/update/{id?}', 'update')->name('update-marker');
             Route::post('/show', 'show')->name('show-marker');
+
+            // get marker count
+            Route::get('/get-count', 'getCount')->name('get-marker-count');
 
             // Additional
             Route::post('/show_gramasi', 'show_gramasi')->name('show_gramasi');

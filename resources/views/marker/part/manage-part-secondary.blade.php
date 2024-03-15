@@ -127,7 +127,9 @@
                                     <div class="col-3">
                                         <div class="mb-4">
                                             <label><small><b>&nbsp;</b></small></label>
-                                            <button type="button" class="btn btn-block bg-primary" name="save" id="save" onclick="save();"><i class="fa fa-save"></i></button>
+                                            <button type="button" class="btn btn-block bg-primary" name="save" id="save">
+                                                <i class="fa fa-save"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -169,6 +171,10 @@
         document.addEventListener("DOMContentLoaded", () => {
             clearData();
             dataTableReload();
+        });
+
+        document.getElementById("save").addEventListener("click", () => {
+            save();
         });
 
         // Reset Form
@@ -220,18 +226,17 @@
 
         // Set Proses Options
         function getProses() {
-            let tujuan = document.form.tujuan.value;
-            let html = $.ajax({
+            let options = $.ajax({
                 type: "GET",
                 url: '{{ route('get-master-secondaries-filter') }}',
                 data: {
-                    tujuan_kode: tujuan
+                    tujuan_kode: document.form.tujuan.value
                 },
                 async: false
             }).responseText;
 
-            if (html != "") {
-                $("#proses").html(html);
+            if (options != "") {
+                $("#proses").html(options);
             }
         };
 
@@ -255,13 +260,13 @@
                     proses: proses
                 },
                 success: function(res) {
-                    if (res.icon == 'salah') {
-                        iziToast.warning({
+                    if (res.icon == 'success') {
+                        iziToast.success({
                             message: res.message,
                             position: 'topCenter'
                         });
                     } else {
-                        iziToast.success({
+                        iziToast.error({
                             message: res.message,
                             position: 'topCenter'
                         });

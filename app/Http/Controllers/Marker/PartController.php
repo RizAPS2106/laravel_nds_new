@@ -77,22 +77,22 @@ class PartController extends Controller
                 }
             })
             ->filterColumn('kode', function ($query, $keyword) {
-                $query->whereRaw("LOWER(kode) LIKE LOWER('%" . $keyword . "%')");
+                $query->whereRaw("LOWER(part.kode) LIKE LOWER('%" . $keyword . "%')");
             })
             ->filterColumn('buyer', function ($query, $keyword) {
-                $query->whereRaw("LOWER(buyer) LIKE LOWER('%" . $keyword . "%')");
+                $query->whereRaw("LOWER(part.buyer) LIKE LOWER('%" . $keyword . "%')");
             })
             ->filterColumn('act_costing_ws', function ($query, $keyword) {
-                $query->whereRaw("LOWER(act_costing_ws) LIKE LOWER('%" . $keyword . "%')");
+                $query->whereRaw("LOWER(part.act_costing_ws) LIKE LOWER('%" . $keyword . "%')");
             })
             ->filterColumn('style', function ($query, $keyword) {
-                $query->whereRaw("LOWER(style) LIKE LOWER('%" . $keyword . "%')");
+                $query->whereRaw("LOWER(part.style) LIKE LOWER('%" . $keyword . "%')");
             })
             ->filterColumn('color', function ($query, $keyword) {
-                $query->whereRaw("LOWER(color) LIKE LOWER('%" . $keyword . "%')");
+                $query->whereRaw("LOWER(part.color) LIKE LOWER('%" . $keyword . "%')");
             })
             ->filterColumn('panel', function ($query, $keyword) {
-                $query->whereRaw("LOWER(panel) LIKE LOWER('%" . $keyword . "%')");
+                $query->whereRaw("LOWER(part.panel) LIKE LOWER('%" . $keyword . "%')");
             })
             ->order(function ($query) {
                 $query->
@@ -274,15 +274,15 @@ class PartController extends Controller
             from
                 master_secondary
             where
-                kode = '" . $request->tujuan_kode . "'
+                tujuan_kode = '" . $request->tujuan_kode . "'
         ");
-        $html = "<option value=''>Pilih Proses</option>";
 
-        foreach ($masterSecondary as $dataproses) {
-            $html .= " <option value='" . $dataproses->kode . "'>" . $dataproses->proses . "</option> ";
+        $masterSecondaryOptions = "<option value=''>Pilih Proses</option>";
+        foreach ($masterSecondary as $secondary) {
+            $masterSecondaryOptions .= " <option value='" . $secondary->kode . "'>" . $secondary->proses . "</option> ";
         }
 
-        return $html;
+        return $masterSecondaryOptions;
     }
 
     /**
@@ -429,7 +429,7 @@ class PartController extends Controller
      */
     public function destroy(Part $part, $id = 0)
     {
-        $part=Part::find("id", $id);
+        $part=Part::find($id);
 
         // Only for parting with no form
         $countPartForm = PartForm::where("part_kode", $part->kode)->count();
@@ -807,7 +807,7 @@ class PartController extends Controller
             );
         }
         return array(
-            'icon' => 'fail',
+            'icon' => 'error',
             'message' => 'Data Part "' . $validatedRequest['part'] . '" berhasil diupdate',
         );
     }
