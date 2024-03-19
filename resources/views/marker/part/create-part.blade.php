@@ -148,7 +148,6 @@
 
                 $(".select2").val('').trigger('change');
                 $(".select2bs4").val('').trigger('change');
-                $(".select2bs4custom").val('').trigger('change');
 
                 $("#act_costing_id").val(null).trigger("change");
                 $('#part').val(null).trigger('change');
@@ -168,19 +167,6 @@
 
             // Loading End
             document.getElementById('loading').classList.add("d-none");
-        });
-
-        // Select2 Autofocus
-        $(document).on('select2:open', () => {
-            document.querySelector('.select2-search__field').focus();
-        });
-
-        // Initialize Select2 Elements
-        $('.select2').select2();
-
-        // Initialize Select2BS4 Elements
-        $('.select2bs4').select2({
-            theme: 'bootstrap4',
         });
 
         // Step One (WS) on change event
@@ -215,7 +201,7 @@
         function updatePanelList() {
             document.getElementById('panel').value = null;
             return $.ajax({
-                url: '{{ route("get-general-panels") }}',
+                url: '{{ route("get-part-panels") }}',
                 type: 'get',
                 data: {
                     act_costing_id: $('#act_costing_id').val(),

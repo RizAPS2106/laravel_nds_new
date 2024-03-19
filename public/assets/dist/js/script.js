@@ -5,6 +5,7 @@ $.ajaxSetup({
     }
 });
 
+// Initial Function
 document.addEventListener('DOMContentLoaded', () => {
     // Bootstrap modal configuration
     $.fn.modal.Constructor.prototype.enforceFocus = function() {};
@@ -12,6 +13,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Enable bootstrap tooltip
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
     const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+    // Initialize Select2 Elements
+    $('.select2').select2();
+
+    // Initialize Select2BS4 Elements
+    $('.select2bs4').select2({
+        theme: 'bootstrap4',
+    });
+
+    // Select2 Autofocus
+    $(document).on('select2:open', () => {
+        document.querySelector('.select2-search__field').focus();
+    });
 });
 
 // Capitalize
@@ -238,7 +252,7 @@ function editData(e, modal, addons = []) {
             document.getElementById('edit_'+key).value = data[key];
             document.getElementById('edit_'+key).setAttribute('value', data[key]);
 
-            if (document.getElementById('edit_'+key).classList.contains('select2') || document.getElementById('edit_'+key).classList.contains('select2bs4') || document.getElementById('edit_'+key).classList.contains('select2bs4stat')) {
+            if (document.getElementById('edit_'+key).classList.contains('select2') || document.getElementById('edit_'+key).classList.contains('select2bs4') || document.getElementById('edit_'+key).classList.contains('select2bs4stat') || document.getElementById('edit_'+key).classList.contains('select2manual')) {
                 $('#edit_'+key).val(data[key]).trigger('change.select2');
             }
         } else {
