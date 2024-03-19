@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Marker;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\Controller;
 
@@ -32,16 +33,17 @@ class MarkerController extends Controller
                 style,
                 color,
                 panel,
-                gelar_qty,
-                gelar_qty_balance,
+                gelar_qty_marker,
+                gelar_qty_balance_marker,
                 tipe_marker,
                 urutan_marker,
                 po_marker,
-                CONCAT( panjang_marker, ' ', UPPER(unit_panjang_marker), ' ', comma_marker, ' ', UPPER(unit_comma_marker) ) panjang_marker, CONCAT( lebar_marker, ' ', UPPER(unit_lebar_marker) ) lebar_marker,
+                CONCAT( panjang_marker, ' ', UPPER(unit_panjang_marker), ' ', comma_marker, ' ', UPPER(unit_comma_marker) ) panjang_marker,
+                CONCAT( lebar_marker, ' ', UPPER(unit_lebar_marker) ) lebar_marker,
                 COALESCE( gramasi_marker, 0 ) gramasi,
                 COALESCE( form_cut_inputs.total_form, 0 ) total_form,
                 COALESCE( form_cut_inputs.total_ply, 0 ) total_ply,
-                CONCAT( COALESCE( form_cut_inputs.total_ply, 0 ), '/', gelar_qty ) ply_progress,
+                CONCAT( COALESCE( form_cut_inputs.total_ply, 0 ), '/', gelar_qty_marker ) ply_progress,
                 COALESCE( notes, '-' ) notes,
                 cancel
             ")->
@@ -356,7 +358,6 @@ class MarkerController extends Controller
                 'panel' => $validatedRequest['panel'],
                 'cons_ws' => $validatedRequest['cons_ws'],
                 'tipe_marker' => $validatedRequest['tipe_marker'],
-                'status_marker' => $validatedRequest['status_marker'],
                 'urutan_marker' => $validatedRequest['urutan_marker'],
                 'panjang_marker' => $validatedRequest['p_marker'],
                 'unit_panjang_marker' => $validatedRequest['p_unit'],
@@ -364,8 +365,8 @@ class MarkerController extends Controller
                 'unit_comma_marker' => $validatedRequest['comma_unit'],
                 'lebar_marker' => $validatedRequest['l_marker'],
                 'unit_lebar_marker' => $validatedRequest['l_unit'],
-                'gelar_qty_marker' => $validatedRequest['gelar_marker_qty'],
-                'gelar_qty_balance_marker' => $validatedRequest['gelar_marker_qty'],
+                'gelar_qty_marker' => $validatedRequest['gelar_qty_marker'],
+                'gelar_qty_balance_marker' => $validatedRequest['gelar_qty_marker'],
                 'po_marker' => $validatedRequest['po_marker'],
                 'cons_marker' => $validatedRequest['cons_marker'],
                 'gramasi_marker' => $validatedRequest['gramasi_marker'],
@@ -435,9 +436,9 @@ class MarkerController extends Controller
                     group by
                         id_act_cost
                 )
-                b on a.act_costing_id = b.id_act_cost
+            b on a.act_costing_id = b.id_act_cost
             where
-                id = '$request->kode_marker'
+                id = '$request->id'
         ");
 
         $markerDetailData = DB::select("
@@ -448,7 +449,7 @@ class MarkerController extends Controller
                 marker_input_detail a
             left join master_size_new b on a.size = b.size
             where
-                marker_id = '$request->kode_marker'
+                marker_input_kode = '".$markerData[0]->kode."'
             order by
                 urutan
             asc
@@ -457,17 +458,17 @@ class MarkerController extends Controller
         $markerFormData = DB::select("
             select
                 no_form,
-                DATE_FORMAT(tanggal_form_cut, '%d-%m-%Y') tanggal_form_cut,
+                DATE_FORMAT(a.tanggal, '%d-%m-%Y') tanggal_form_cut,
                 DATE_FORMAT(waktu_mulai, '%d-%m-%Y %T') waktu_mulai,
                 DATE_FORMAT(waktu_selesai, '%d-%m-%Y %T') waktu_selesai,
                 UPPER(u.name) no_meja,
-                a.status
+                a.status_form
             from
                 form_cut_input a
-            inner join marker_input b on  a.id_marker = b.kode
-            left join users u on a.no_meja = u.id
+            inner join marker_input b on  a.marker_input_kode = b.kode
+            left join users u on a.meja_id = u.id
             where
-                b.id = '$request->id_c'
+                b.id = '$request->id'
         ");
 
         foreach ($markerData as $marker) {
@@ -564,19 +565,19 @@ class MarkerController extends Controller
                 <div class='row'>
                     <div class='col-sm-3'>
                         <div class='form-group'>
-                            <label class='form-label'><small>Cons WS</small></label>
+                            <label class='form-label'><small>Cons. WS</small></label>
                             <input type='text' class='form-control' id='cons_ws' name='cons_ws' value = '" . $marker->cons_ws . "' readonly>
                         </div>
                     </div>
                     <div class='col-sm-3'>
                         <div class='form-group'>
-                            <label class='form-label'><small>Cons Piping</small></label>
+                            <label class='form-label'><small>Cons. Piping</small></label>
                             <input type='text' class='form-control' id='cons_piping' name='cons_piping' value = '" . $marker->cons_piping_marker . "' readonly>
                         </div>
                     </div>
                     <div class='col-sm-3'>
                         <div class='form-group'>
-                            <label class='form-label'><small>Cons Marker</small></label>
+                            <label class='form-label'><small>Cons. Marker</small></label>
                             <input type='text' class='form-control' id='cons_marker' name='cons_marker' value = '" . $marker->cons_marker . "' readonly>
                         </div>
                     </div>
@@ -654,7 +655,7 @@ class MarkerController extends Controller
 
             <div class='row'>
                 <div class='col-md-12'>
-                    <div class='card card-warning collapsed-card'>
+                    <div class='card card-info collapsed-card'>
                         <div class='card-header'>
                             <h1 class='card-title'>Status Form</h1>
                             <div class='card-tools'>
@@ -714,7 +715,7 @@ class MarkerController extends Controller
     public function update(Marker $marker, Request $request, $id)
     {
         $validatedRequest = $request->validate([
-            "tanggal_cutting" => "required",
+            "tanggal" => "required",
             "act_costing_id" => "required",
             "act_costing_ws" => "required",
             "buyer" => "required",
@@ -722,6 +723,7 @@ class MarkerController extends Controller
             "color" => "required",
             "panel" => "required",
             "cons_ws" => "required|numeric|min:0",
+            "kode_marker" => "required",
             "tipe_marker" => "required",
             "urutan_marker" => "required",
             "po_marker" => "required",
@@ -747,7 +749,7 @@ class MarkerController extends Controller
 
             $markerUpdate = $marker->update([
                 'tanggal' => $validatedRequest['tanggal'],
-                'kode' => $markerCode,
+                'kode' => $validatedRequest['kode_marker'],
                 'act_costing_id' => $validatedRequest['act_costing_id'],
                 'act_costing_ws' => $validatedRequest['act_costing_ws'],
                 'buyer' => $validatedRequest['buyer'],
@@ -756,7 +758,6 @@ class MarkerController extends Controller
                 'panel' => $validatedRequest['panel'],
                 'cons_ws' => $validatedRequest['cons_ws'],
                 'tipe_marker' => $validatedRequest['tipe_marker'],
-                'status_marker' => $validatedRequest['status_marker'],
                 'urutan_marker' => $validatedRequest['urutan_marker'],
                 'panjang_marker' => $validatedRequest['p_marker'],
                 'unit_panjang_marker' => $validatedRequest['p_unit'],
@@ -764,8 +765,8 @@ class MarkerController extends Controller
                 'unit_comma_marker' => $validatedRequest['comma_unit'],
                 'lebar_marker' => $validatedRequest['l_marker'],
                 'unit_lebar_marker' => $validatedRequest['l_unit'],
-                'gelar_qty_marker' => $validatedRequest['gelar_marker_qty'],
-                'gelar_qty_balance_marker' => $validatedRequest['gelar_marker_qty'],
+                'gelar_qty_marker' => $validatedRequest['gelar_qty_marker'],
+                'gelar_qty_balance_marker' => $validatedRequest['gelar_qty_marker'],
                 'po_marker' => $validatedRequest['po_marker'],
                 'cons_marker' => $validatedRequest['cons_marker'],
                 'gramasi_marker' => $validatedRequest['gramasi_marker'],
@@ -789,7 +790,7 @@ class MarkerController extends Controller
                     ]);
                 } else {
                     MarkerDetail::create([
-                        "marker_kode" => $marker->kode,
+                        "marker_input_kode" => $marker->kode,
                         "so_det_id" => $request["so_det_id"][$i],
                         "size" => $request["size"][$i],
                         "ratio" => $request["ratio"][$i],
@@ -822,13 +823,13 @@ class MarkerController extends Controller
         $markerGramasi = DB::select("
             select
                 marker_input.id,
-                gramasi,
+                gramasi_marker,
                 tipe_marker,
                 status_marker,
                 count(form_cut_input.id) jumlah_form
             from
                 marker_input
-            left join form_cut_input on form_cut_input.id_marker = marker_input.kode
+                left join form_cut_input on form_cut_input.marker_input_kode = marker_input.kode
             where
                 marker_input.id = '".$request->id."'
             group by

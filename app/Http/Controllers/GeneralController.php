@@ -71,15 +71,21 @@ class GeneralController extends Controller
                     sd.color
             ");
 
-        return $colors ? $colors[0] : null;
+        $options = "<option value=''>Pilih Color</option>";
+
+        foreach ($colors as $color) {
+            $options .= " <option value='" . $color->color . "'>" . $color->color . "</option> ";
+        }
+
+        return $options;
     }
 
     public function getSizeList(Request $request)
     {
-        $sizeQuery = DB::table("master_sb_ws")->
+        $sizesQuery = DB::table("master_sb_ws")->
             selectRaw("
                 master_sb_ws.id_so_det so_det_id,
-                master_sb_ws.ws no_ws,
+                master_sb_ws.ws act_costing_ws,
                 master_sb_ws.color,
                 master_sb_ws.size,
                 master_sb_ws.qty order_qty,
@@ -87,16 +93,25 @@ class GeneralController extends Controller
                 COALESCE(marker_input_detail.cut_qty, 0) cut_qty
             ")->
             where("master_sb_ws.id_act_cost", $request->act_costing_id)->
-            where("master_sb_ws.color", $request->color)->
-            leftJoin('marker_input_detail', 'marker_input_detail.so_det_id', '=', 'master_sb_ws.id_so_det')->
-            leftJoin('marker_input', 'marker_input.id', '=', 'marker_input_detail.marker_id')->
-            leftJoin("master_size_new", "master_size_new.size", "=", "master_sb_ws.size");
+            where("master_sb_ws.color", $request->color);
 
         if ($request->marker_input_kode) {
-            $sizeQuery->where("marker_input_detail.marker_input_kode", $request->marker_input_kode);
+            $sizesQuery->
+                leftJoin('marker_input_detail', function ($join) use ($request) {
+                    $join->on('marker_input_detail.so_det_id', '=', 'master_sb_ws.id_so_det');
+                    $join->on('marker_input_detail.marker_input_kode', '=', DB::raw("'".$request->marker_input_kode."'"));
+                })->
+                leftJoin('master_size_new', 'master_size_new.size', '=', 'master_sb_ws.size')->
+                leftJoin('marker_input', 'marker_input.id', '=', 'marker_input_detail.marker_input_kode');
+        } else {
+            $sizesQuery->
+                leftJoin('marker_input_detail', 'marker_input_detail.so_det_id', '=', 'master_sb_ws.id_so_det')->
+                leftJoin('marker_input', 'marker_input.id', '=', 'marker_input_detail.marker_input_kode')->
+                leftJoin("master_size_new", "master_size_new.size", "=", "master_sb_ws.size");
         }
 
-        $sizes = $sizeQuery->groupBy("id_act_cost", "color", "size")->
+        $sizes = $sizesQuery->
+            groupBy("id_act_cost", "color", "size")->
             orderBy("master_size_new.urutan")->
             get();
 

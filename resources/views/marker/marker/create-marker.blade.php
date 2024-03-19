@@ -1,18 +1,8 @@
 @extends('layouts.index')
 
-@section('custom-link')
-    <!-- DataTables -->
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
-    <!-- Select2 -->
-    <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
-@endsection
-
 @section('content')
     <div class="d-flex justify-content-between mb-3">
-        <h5 class="fw-bold text-sb">Tambah Data Marker</h5>
+        <h5 class="fw-bold text-sb"><i class="fa fa-plus-square fa-sm"></i> Tambah Data Marker</h5>
         <a href="{{ route('marker') }}" class="btn btn-primary btn-sm px-1 py-1"><i class="fas fa-reply"></i> Kembali ke Marker</a>
     </div>
     <form action="{{ route('store-marker') }}" method="post" id="store-marker" onsubmit="submitMarkerForm(this, event)">
@@ -50,7 +40,7 @@
                         <div class="mb-1">
                             <div class="form-group">
                                 <label><small>Color</small></label>
-                                <select class="form-control select2bs4" id="color" name="color" style="width: 100%;">
+                                <select class="form-control select2bs4" id="color" name="color">
                                     <option selected="selected" value="">Pilih Color</option>
                                     {{-- select 2 option --}}
                                 </select>
@@ -61,7 +51,7 @@
                         <div class="mb-1">
                             <div class="form-group">
                                 <label><small>Panel</small></label>
-                                <select class="form-control select2bs4" id="panel" name="panel" style="width: 100%;" >
+                                <select class="form-control select2bs4" id="panel" name="panel">
                                     <option selected="selected" value="">Pilih Panel</option>
                                     {{-- select 2 option --}}
                                 </select>
@@ -132,19 +122,19 @@
                             <div class="col-4 col-md-4">
                                 <div class="mb-1">
                                     <label class="form-label"><small>Cons Piping</small></label>
-                                    <input type="number" class="form-control" id="cons_piping" name="cons_piping" step=".001">
+                                    <input type="number" class="form-control" id="cons_piping_marker" name="cons_piping_marker" step=".001">
                                 </div>
                             </div>
                             <div class="col-4 col-md-4">
                                 <div class="mb-1">
                                     <label class="form-label"><small>Gramasi</small></label>
-                                    <input type="number" class="form-control" id="gramasi" name="gramasi" step=".001">
+                                    <input type="number" class="form-control" id="gramasi_marker" name="gramasi_marker" step=".001">
                                 </div>
                             </div>
                             <div class="col-4 col-md-4">
                                 <div class="mb-1">
                                     <label class="form-label"><small>Qty Gelar Marker</small></label>
-                                    <input type="number" class="form-control" id="gelar_marker_qty" name="gelar_marker_qty" onchange="calculateAllRatio(this)" onkeyup="calculateAllRatio(this)">
+                                    <input type="number" class="form-control" id="gelar_qty_marker" name="gelar_qty_marker" onchange="calculateAllRatio(this)" onkeyup="calculateAllRatio(this)">
                                 </div>
                             </div>
                         </div>
@@ -158,17 +148,17 @@
                     <div class="col-md-3">
                         <div class="mb-1">
                             <label class="form-label"><small>PO</small></label>
-                            <input type="text" class="form-control" id="po" name="po">
+                            <input type="text" class="form-control" id="po_marker" name="po_marker">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="mb-1">
                             <label class="form-label"><small>Tipe Marker</small></label>
                             <select class="form-select select2bs4" id="tipe_marker" name="tipe_marker" style="width: 100%;">
-                                <option selected="selected" value="regular marker">Regular Marker</option>
-                                <option value="special marker">Special Marker</option>
-                                <option value="pilot marker">Pilot Marker</option>
-                                <option value="bulk marker">Bulk Marker</option>
+                                <option selected="selected" value="regular">Regular</option>
+                                <option value="special">Special</option>
+                                <option value="pilot">Pilot</option>
+                                <option value="bulk">Bulk</option>
                             </select>
                         </div>
                     </div>
@@ -219,21 +209,13 @@
                         </tr>
                     </tfoot>
                 </table>
-                <button class="btn btn-sb float-end mt-3">Simpan</button>
+                <button class="btn btn-sb float-end mt-3"><i class="fa fa-save fa-sm"></i> Simpan</button>
             </div>
         </div>
     </form>
 @endsection
 
 @section('custom-script')
-    <!-- DataTables & Plugins -->
-    <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
-    <!-- Select2 -->
-    <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
-    <!-- Page specific script -->
     <script>
         // Global Variable
         var sumCutQty = null;
@@ -245,9 +227,9 @@
             getTotalCutQty($("#act_costing_id").val(), $("#color").val(), $("#panel").val());
 
             // Marker Type Default Value
-            $("#tipe_marker").val("regular marker");
+            $("#tipe_marker").val("regular").trigger("change");
 
-            //Reset Form
+            // Reset Form
             if (document.getElementById('store-marker')) {
                 document.getElementById('store-marker').reset();
 
@@ -264,21 +246,13 @@
             document.querySelector('.select2-search__field').focus();
         });
 
-        // Initialize Select2 Elements
-        $('.select2').select2()
-
-        // Initialize Select2BS4 Elements
-        $('.select2bs4').select2({
-            theme: 'bootstrap4',
-        })
-
         // Get & Set Total Cut Qty Based on Order WS and Order Color ( to know remaining cut qty )
-        async function getTotalCutQty(wsId, color, panel) {
+        async function getTotalCutQty(actCostingId, color, panel) {
             sumCutQty = await $.ajax({
                 url: '{{ route("create-marker") }}',
                 type: 'get',
                 data: {
-                    act_costing_id: wsId,
+                    act_costing_id: actCostingId,
                     color: color,
                     panel: panel,
                 },
@@ -323,7 +297,7 @@
                 dataType: 'json',
                 success: function (res) {
                     if (res) {
-                        document.getElementById('ws').value = res.kpno;
+                        document.getElementById('act_costing_ws').value = res.kpno;
                         document.getElementById('buyer').value = res.buyer;
                         document.getElementById('style').value = res.styleno;
                     }
@@ -417,7 +391,7 @@
             },
             columns: [
                 {
-                    data: 'no_ws'
+                    data: 'act_costing_ws'
                 },
                 {
                     data: 'color'
@@ -610,7 +584,7 @@
         // Calculate Cut Qty Based on Ratio and Spread Qty ( Ratio * Spread Qty )
         function calculateRatio(id) {
             let ratio = document.getElementById('ratio-'+id).value;
-            let gelarQty = document.getElementById('gelar_marker_qty').value;
+            let gelarQty = document.getElementById('gelar_qty_marker').value;
 
             // Cut Qty Formula
             document.getElementById('cut-qty-'+id).value = ratio * gelarQty;
@@ -667,8 +641,9 @@
             }
         }
 
+        // Add Note When Pilot
         document.getElementById("tipe_marker").onchange = function(e) {
-            if (this.value == "pilot marker") {
+            if (this.value == "pilot") {
                 document.getElementById("notes").value = "PILOT MARKER";
             } else {
                 document.getElementById("notes").value = "";
@@ -756,8 +731,10 @@
                         }
                     }
                 }, error: function (jqXHR) {
-                    // Error Response
+                    document.getElementById("loading").classList.add("d-none");
+                    $("input[type=submit][clicked=true]").removeAttr('disabled');
 
+                    // Error Response
                     let res = jqXHR.responseJSON;
                     let message = '';
                     let i = 0;

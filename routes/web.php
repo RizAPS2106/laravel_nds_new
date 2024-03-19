@@ -161,7 +161,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/get-count', 'getCount')->name('get-marker-count');
 
             // Additional
-            Route::post('/show_gramasi', 'show_gramasi')->name('show_gramasi');
+            Route::post('/show-gramasi', 'showGramasi')->name('show-gramasi');
             Route::post('/update_status', 'update_status')->name('update_status');
             Route::put('/update_marker', 'update_marker')->name('update_marker');
             Route::post('/print-marker/{kodeMarker?}', 'printMarker')->name('print-marker');

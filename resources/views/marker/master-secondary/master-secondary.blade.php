@@ -37,7 +37,7 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Tujuan</label>
-                            <select class="form-control select2bs4" id="tujuan" name="tujuan" style="width: 100%;">
+                            <select class="form-control select2manual" id="tujuan" name="tujuan">
                                 <option selected="selected" value="">Pilih Tujuan</option>
                                 @foreach ($tujuan as $item)
                                     <option value="{{ $item->isi }}">{{ $item->tampil }}</option>
@@ -72,7 +72,7 @@
                         <input type="hidden" class="form-control" name="edit_id" id="edit_id" value="">
                         <div class="mb-3">
                             <label class="form-label">Tujuan Secondary</label>
-                            <select class="form-control select2bs4" id="edit_tujuan" name="edit_tujuan" style="width: 100%;">
+                            <select class="form-control select2manual" id="edit_tujuan" name="edit_tujuan" style="width: 100%;">
                                 <option selected="selected" value="">Pilih Tujuan</option>
                                 @foreach ($tujuan as $item)
                                     <option value="{{ $item->isi }}">
@@ -98,6 +98,24 @@
 
 @section('custom-script')
     <script>
+        // Initial Function
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select2 Initialize
+            $('#tujuan').select2({
+                theme: 'bootstrap4',
+                dropdownParent: $('#createMasterSecondaryModal')
+            });
+            $('#edit_tujuan').select2({
+                theme: 'bootstrap4',
+                dropdownParent: $('#editMasterSecondaryModal')
+            });
+
+            // Select2 Autofocus
+            $(document).on('select2:open', () => {
+                document.querySelector('.select2-search__field').focus();
+            });
+        });
+
         let datatableMasterSecondary= $("#datatable-master-secondary").DataTable({
             ordering: false,
             processing: true,
