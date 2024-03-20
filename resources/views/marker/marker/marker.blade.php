@@ -154,8 +154,8 @@
             ajax: {
                 url: '{{ route('marker') }}',
                 data: function(d) {
-                    d.tanngalAwal = $('#tanggal-awal').val();
-                    d.tanggalAkhir = $('#tgl-akhir').val();
+                    d.tanggalAwal = $('#tanggal-awal').val();
+                    d.tanggalAkhir = $('#tanggal-akhir').val();
                 },
             },
             columns: [
@@ -187,7 +187,7 @@
                     data: 'lebar_marker',
                 },
                 {
-                    data: 'gramasi'
+                    data: 'gramasi_marker'
                 },
                 {
                     data: undefined
@@ -199,7 +199,8 @@
                     data: 'po_marker'
                 },
                 {
-                    data: 'total_form'
+                    data: 'total_form',
+                    searchable: false
                 },
                 {
                     data: 'notes',
@@ -304,7 +305,7 @@
         // Datatable Column Filter
         $('#datatable thead tr').clone(true).appendTo('#datatable thead');
         $('#datatable thead tr:eq(1) th').each(function(i) {
-            if (i != 0) {
+            if (i != 0 && i != 10 && i != 13) {
                 var title = $(this).text();
                 $(this).html('<input type="text" class="form-control form-control-sm" />');
 

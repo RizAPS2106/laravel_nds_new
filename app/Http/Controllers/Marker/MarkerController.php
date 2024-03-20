@@ -40,7 +40,7 @@ class MarkerController extends Controller
                 po_marker,
                 CONCAT( panjang_marker, ' ', UPPER(unit_panjang_marker), ' ', comma_marker, ' ', UPPER(unit_comma_marker) ) panjang_marker,
                 CONCAT( lebar_marker, ' ', UPPER(unit_lebar_marker) ) lebar_marker,
-                COALESCE( gramasi_marker, 0 ) gramasi,
+                COALESCE( gramasi_marker, 0 ) gramasi_marker,
                 COALESCE( form_cut_inputs.total_form, 0 ) total_form,
                 COALESCE( form_cut_inputs.total_ply, 0 ) total_ply,
                 CONCAT( COALESCE( form_cut_inputs.total_ply, 0 ), '/', gelar_qty_marker ) ply_progress,
