@@ -173,8 +173,8 @@
                 <th>{{ $markerDetail ? $markerDetail->ratio : 0 }}</th>
             @endforeach
             <th>{{ $totalRatio }}</th>
-            <th>{{ $markerData->gelar_qty }}</th>
-            <th>{{ $markerData->gelar_qty * $totalRatio }}</th>
+            <th>{{ $markerData->gelar_qty_marker }}</th>
+            <th>{{ $markerData->gelar_qty_marker * $totalRatio }}</th>
             <th>{{ $pMeter }}</th>
             <th>{{ $commaCM }}</th>
             <th>{{ $markerData->cons_marker }}</th>
@@ -182,7 +182,7 @@
         <tr>
             <th colspan="{{ $markerData->markerDetails->count() + 2 }}" style="border: none;"><br></th>
             <th>TOTAL QTY</th>
-            <th>{{ $totalRatio * $markerData->gelar_qty }}</th>
+            <th>{{ $totalRatio * $markerData->gelar_qty_marker }}</th>
             <th rowspan="2" colspan="2">-</th>
             <th>RATA-RATA CONS</th>
         </tr>

@@ -220,7 +220,7 @@
                             return `
                                 <div class='d-flex gap-1 justify-content-center mb-1'>
                                     <a class='btn btn-info btn-sm' data-bs-toggle="modal" data-bs-target="#showMarkerModal" onclick='getdetail(` + row.id + `);'>
-                                        <i class='fa fa-search'></i>
+                                        <i class='fa fa-search-plus'></i>
                                     </a>
                                     <a class='btn btn-primary btn-sm' data-bs-toggle="modal" data-bs-target="#editMarkerModal" onclick='edit(` + row.id + `);'>
                                         <i class='fa fa-edit'></i>
@@ -233,7 +233,7 @@
                             return `
                                 <div class='d-flex gap-1 justify-content-center mb-1'>
                                     <a class='btn btn-info btn-sm' data-bs-toggle="modal" data-bs-target="#showMarkerModal" onclick='getdetail(` + row.id + `);'>
-                                        <i class='fa fa-search'></i>
+                                        <i class='fa fa-search-plus'></i>
                                     </a>
                                     <a class='btn btn-primary btn-sm' data-bs-toggle="modal" data-bs-target="#editMarkerModal" onclick='edit(` + row.id + `);'>
                                         <i class='fa fa-edit'></i>
@@ -323,7 +323,7 @@
 
         // Show Marker Detail Modal
         function getdetail(id) {
-            $("#showMarkerModalLabel").html('<i class="fa fa-search fa-sm"></i> Marker Detail');
+            $("#showMarkerModalLabel").html('<i class="fa fa-search-plus fa-sm"></i> Marker Detail');
             let html = $.ajax({
                 type: "POST",
                 url: '{{ route('show-marker') }}',
