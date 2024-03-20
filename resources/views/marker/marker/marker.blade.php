@@ -31,12 +31,12 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        <input type='hidden' class='form-control' id='edit_id' name='edit_id' value = ''>
                         <div class='row'>
                             <div class='col-sm-12'>
                                 <div class='form-group'>
                                     <label class='form-label'><small class="fw-bold">Gramasi</small></label>
-                                    <input type='number' class='form-control' id='txt_gramasi' name='txt_gramasi' value = ''>
-                                    <input type='hidden' class='form-control' id='id' name='id' value = ''>
+                                    <input type='number' class='form-control' id='edit_gramasi' name='edit_gramasi' value = ''>
                                 </div>
                             </div>
                             <div class='col-sm-12' id="marker_pilot">
@@ -92,11 +92,11 @@
             <div class="d-flex align-items-end gap-3 mb-3">
                 <div class="mb-3">
                     <label class="form-label"><small>Tanggal Awal</small></label>
-                    <input type="date" class="form-control form-control-sm" id="tanggal-awal" name="tanggal_akhir"value="{{ date('Y-m-d') }}" onchange="reloadTable()">
+                    <input type="date" class="form-control form-control-sm" id="tanggal_awal" name="tanggal_akhir" value="{{ date('Y-m-d') }}" onchange="reloadTable()">
                 </div>
                 <div class="mb-3">
                     <label class="form-label"><small>Tanggal Akhir</small></label>
-                    <input type="date" class="form-control form-control-sm" id="tanggal-awal" name="tanggal_akhir"value="{{ date('Y-m-d') }}" onchange="reloadTable()">
+                    <input type="date" class="form-control form-control-sm" id="tanggal_akhir" name="tanggal_akhir" value="{{ date('Y-m-d') }}" onchange="reloadTable()">
                 </div>
                 <div class="mb-3">
                     <button class="btn btn-primary btn-sm" onclick="reloadTable()"><i class="fa fa-search"></i></button>
@@ -139,7 +139,7 @@
             let oneWeeksBeforeYear = oneWeeksBefore.getFullYear();
             let oneWeeksBeforeFull = oneWeeksBeforeYear + '-' + oneWeeksBeforeMonth + '-' + oneWeeksBeforeDate;
 
-            $("#tanggal-awal").val(oneWeeksBeforeFull).trigger("change");
+            $("#tanggal_awal").val(oneWeeksBeforeFull).trigger("change");
 
             window.addEventListener("focus", () => {
                 $('#datatable').DataTable().ajax.reload(null, false);
@@ -154,8 +154,8 @@
             ajax: {
                 url: '{{ route('marker') }}',
                 data: function(d) {
-                    d.tanggalAwal = $('#tanggal-awal').val();
-                    d.tanggalAkhir = $('#tanggal-akhir').val();
+                    d.tanggal_awal = $('#tanggal_awal').val();
+                    d.tanggal_akhir = $('#tanggal_akhir').val();
                 },
             },
             columns: [
@@ -347,10 +347,10 @@
                 },
                 dataType: 'json',
                 success: function(response) {
-                    document.getElementById('txt_gramasi').value = response.gramasi;
-                    document.getElementById('id').value = response.id;
+                    document.getElementById('edit_id').value = response.id;
+                    document.getElementById('edit_gramasi').value = response.gramasi;
 
-                    if (response.tipe_marker == "pilot marker") {
+                    if (response.tipe_marker == "pilot") {
                         document.getElementById('marker_pilot').classList.remove('d-none');
 
                         if (response.status_marker) {
@@ -363,9 +363,9 @@
                     }
 
                     if (response.jumlah_form > 0) {
-                        document.getElementById('txt_gramasi').setAttribute('readonly', true);
+                        document.getElementById('edit_gramasi').setAttribute('readonly', true);
                     } else {
-                        document.getElementById('txt_gramasi').removeAttribute('readonly');
+                        document.getElementById('edit_gramasi').removeAttribute('readonly');
                     }
 
                     document.getElementById('advanced-edit-link').setAttribute('href', '{{ route('edit-marker') }}/' + response.id);
