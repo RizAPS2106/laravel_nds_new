@@ -1,21 +1,11 @@
 @extends('layouts.index')
 
-@section('custom-link')
-    <!-- DataTables -->
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
-    <!-- Select2 -->
-    <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
-@endsection
-
 @section('content')
     <div class="d-flex justify-content-between mb-3">
-        <h5 class="fw-bold text-sb">Tambah Data Spreading</h5>
+        <h5 class="fw-bold text-sb"><i class="fa-solid fa-file-circle-plus"></i> Tambah Data Form Spreading</h5>
         <a href="{{ route('spreading') }}" class="btn btn-primary btn-sm px-1 py-1"><i class="fas fa-reply"></i> Kembali ke Spreading</a>
     </div>
-    <form action="{{ route('store-spreading') }}" method="post" id="store-spreading" name='form' onsubmit="submitSpreadingForm(this, event)">
+    <form action="{{ route('store-spreading') }}" method="post" id="store-spreading" name='form' onsubmit="submitForm(this, event)">
         @csrf
             <div class='row'>
                 <div class="col-md-6">
@@ -31,21 +21,20 @@
                                 <div class="col-6 col-md-6">
                                     <div class="form-group">
                                         <label>No. WS</label>
-                                        <select class="form-control select2bs4" id="cbows" name="cbows" onchange='getno_marker();' style="width: 100%;">
+                                        <select class="form-control select2bs4" id="act_costing_id" name="act_costing_id" onchange='getMarkerOptions();' style="width: 100%;">
                                             <option selected="selected" value="">Pilih WS</option>
-                                            @foreach ($data_ws as $dataws)
-                                                <option value="{{ $dataws->act_costing_id }}">
-                                                    {{ $dataws->ws }}
+                                            @foreach ($orders as $order)
+                                                <option value="{{ $order->act_costing_id }}">
+                                                    {{ $order->act_costing_ws }}
                                                 </option>
                                             @endforeach
                                         </select>
                                     </div>
-                                    <input type='hidden' class='form-control' id='txtid_marker' name='txtid_marker'>
                                 </div>
                                 <div class="col-6 col-md-6">
                                     <div class="form-group">
                                         <label>No. Marker</label>
-                                        <select class='form-control select2bs4' style='width: 100%;' name='cbomarker' id='cbomarker' onchange='getdata_marker();'></select>
+                                        <select class='form-control select2bs4' style='width: 100%;' name='marker_input_kode' id='marker_input_kode' onchange='getMarkerInfo();'></select>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-4">
@@ -57,13 +46,13 @@
                                 <div class="col-6 col-md-4">
                                     <div class="form-group">
                                         <label>Qty Ply Cutting</label>
-                                        <input type='number' class='form-control' id='txtqty_ply_cut' name='txtqty_ply_cut' oninput='sum();' autocomplete='off'>
+                                        <input type='number' class='form-control' id='qty_ply' name='qty_ply' oninput='calculation();' autocomplete='off'>
                                     </div>
                                 </div>
                                 <div class="col-6 col-md-4">
                                     <div class="form-group">
                                         <label>Total Form</label>
-                                        <input type='number' class='form-control' id='jumlah_form' name='jumlah_form' oninput='customSum();' autocomplete='off'>
+                                        <input type='number' class='form-control' id='jumlah_form' name='jumlah_form' oninput='customCalculation();' autocomplete='off'>
                                     </div>
                                 </div>
                                 <div class="col-12">
@@ -89,19 +78,19 @@
                                 <div class="col-sm-3">
                                     <div class="form-group">
                                         <label>Qty Ply Marker</label>
-                                        <input type='text' class='form-control' id='hitungmarker' name='hitungmarker' readonly>
+                                        <input type='text' class='form-control' id='qty_ply_marker' name='qty_ply_marker' readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-3">
                                     <div class="form-group">
                                         <label>Qty Ply Cutting</label>
-                                        <input type='text' class='form-control' id='hitungcut' name='hitungcut' readonly>
+                                        <input type='text' class='form-control' id='qty_ply_cutting' name='qty_ply_cutting' readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-3">
                                     <div class="form-group">
                                         <label>Total Form</label>
-                                        <input type='text' class='form-control' id='hitungform' name='hitungform' readonly>
+                                        <input type='text' class='form-control' id='total_form' name='total_form' readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-3">
@@ -124,10 +113,12 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-sm-4">
-                                    <div class="form-group">
-                                        {{-- <label>&emsp;&emsp;&emsp;</label> --}}
-                                        <button type='submit' name='submit' class='btn btn-block btn-success'>Simpan</button>
+                                <div class="col-sm-12">
+                                    <div class="form-group mt-3">
+                                        <button type='submit' name='submit' class='btn btn-block btn-success fw-bold'>
+                                            <i class="fa fa-save"></i>
+                                            SIMPAN
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -150,13 +141,13 @@
                                 <div class="col-sm-6">
                                     <div class="form-group">
                                         <label>Panel</label>
-                                        <input type='text' class='form-control' id='txtpanel' name='txtpanel' readonly>
+                                        <input type='text' class='form-control' id='panel' name='panel' readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
                                         <label>Color</label>
-                                        <input type='text' class='form-control' id='txtcolor' name='txtcolor' readonly>
+                                        <input type='text' class='form-control' id='color' name='color' readonly>
                                     </div>
                                 </div>
                             </div>
@@ -164,13 +155,13 @@
                                 <div class="col-sm-6">
                                     <div class="form-group">
                                         <label>Buyer</label>
-                                        <input type='text' class='form-control' id='txtbuyer' name='txtbuyer' readonly>
+                                        <input type='text' class='form-control' id='buyer' name='buyer' readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
                                         <label>Style</label>
-                                        <input type='text' class='form-control' id='txtstyle' name='txtstyle' readonly>
+                                        <input type='text' class='form-control' id='style' name='style' readonly>
                                     </div>
                                 </div>
                             </div>
@@ -178,25 +169,25 @@
                                 <div class="col-sm-3">
                                     <div class="form-group">
                                         <label>P. Marker</label>
-                                        <input type='text' class='form-control' id='txt_p_marker' name='txt_p_marker' readonly>
+                                        <input type='text' class='form-control' id='p_marker' name='p_marker' readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-3">
                                     <div class="form-group">
                                         <label>Unit</label>
-                                        <input type='text' class='form-control' id='txt_unit_p_marker' name='txt_unit_p_marker' readonly>
+                                        <input type='text' class='form-control' id='unit_p_marker' name='unit_p_marker' readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-3">
                                     <div class="form-group">
                                         <label>Comma</label>
-                                        <input type='text' class='form-control' id='txt_comma_p_marker' name='txt_comma_p_marker' readonly>
+                                        <input type='text' class='form-control' id='comma_p_marker' name='comma_p_marker' readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-3">
                                     <div class="form-group">
                                         <label>Unit</label>
-                                        <input type='text' class='form-control' id='txt_unit_comma_p_marker' name='txt_unit_comma_p_marker' readonly>
+                                        <input type='text' class='form-control' id='unit_comma_p_marker' name='unit_comma_p_marker' readonly>
                                     </div>
                                 </div>
                             </div>
@@ -205,19 +196,19 @@
                                 <div class="col-sm-6">
                                     <div class="form-group">
                                         <label>PO</label>
-                                        <input type='text' class='form-control' id='txt_po_marker' name='txt_po_marker' readonly>
+                                        <input type='text' class='form-control' id='po_marker' name='po_marker' readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-3">
                                     <div class="form-group">
                                         <label>L. Marker</label>
-                                        <input type='text' class='form-control' id='txt_l_marker' name='txt_l_marker' readonly>
+                                        <input type='text' class='form-control' id='l_marker' name='l_marker' readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-3">
                                     <div class="form-group">
                                         <label>Unit</label>
-                                        <input type='text' class='form-control' id='txt_unit_l_marker' name='txt_unit_l_marker' readonly>
+                                        <input type='text' class='form-control' id='unit_l_marker' name='unit_l_marker' readonly>
                                     </div>
                                 </div>
                             </div>
@@ -226,13 +217,13 @@
                                 <div class="col-sm-6">
                                     <div class="form-group">
                                         <label>Qty Gelar Marker</label>
-                                        <input type='text' class='form-control' id='txt_qty_gelar' name='txt_qty_gelar' readonly>
+                                        <input type='text' class='form-control' id='qty_gelar_marker' name='qty_gelar_marker' readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <label>WS</label>
-                                        <input type='text' class='form-control' id='txt_ws' name='txt_ws' readonly>
+                                        <label>No. WS</label>
+                                        <input type='text' class='form-control' id='act_costing_ws' name='act_costing_ws' readonly>
                                     </div>
                                 </div>
                             </div>
@@ -240,16 +231,14 @@
                             <div class="row">
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <label>Cons WS</label>
-                                        <input type='text' class='form-control' id='txt_cons_ws' name='txt_cons_ws'
-                                            readonly>
+                                        <label>Cons. WS</label>
+                                        <input type='text' class='form-control' id='cons_ws' name='cons_ws' readonly>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group">
-                                        <label>Cons Marker</label>
-                                        <input type='text' class='form-control' id='txt_cons_marker'
-                                            name='txt_cons_marker' readonly>
+                                        <label>Cons. Marker</label>
+                                        <input type='text' class='form-control' id='cons_marker' name='cons_marker' readonly>
                                     </div>
                                 </div>
                             </div>
@@ -270,9 +259,9 @@
                             <table id="datatable" class="table table-bordered table-striped table-sm w-100">
                                 <thead>
                                     <tr>
-                                        <th style='width:30%;text-align: center;'>Size</th>
-                                        <th style='width:35%;text-align: center;'>Ratio</th>
-                                        <th style='width:35%;text-align: center;'>Qty Cut Marker</th>
+                                        <th>Size</th>
+                                        <th>Ratio</th>
+                                        <th>Qty Cut Marker</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -284,33 +273,23 @@
 @endsection
 
 @section('custom-script')
-    <!-- DataTables  & Plugins -->
-    <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
-    <!-- Select2 -->
-    <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
     <script>
         $(document).ready(() => {
+            $('#act_costing_id').val("").trigger("change");
+            $("#marker_input_kode").prop("disabled", true);
+            $("#qty_ply").prop("readonly", true);
+
             document.getElementById("tarik_sisa").checked = false;
         });
 
-        $("#tarik_sisa").on("change", () => {
-            console.log($("#tarik_sisa").val());
+        document.getElementById("tarik_sisa").addEventListener("change", () => {
+            if (document.getElementById("tarik_sisa").checked && document.getElementById("sisa").value > 0) {
+                document.getElementById("total_form").value -= 1;
+            } else {
+                calculation();
+                customCalculation();
+            }
         });
-
-        $(document).on('select2:open', () => {
-            document.querySelector('.select2-search__field').focus();
-        });
-
-        $('.select2').select2()
-        $('.select2bs4').select2({
-            theme: 'bootstrap4'
-        })
-        $('#cbows').val("").trigger("change");
-        $("#cbomarker").prop("disabled", true);
-        $("#txtqtyply").prop("readonly", true);
 
         let datatable = $("#datatable").DataTable({
             ordering: false,
@@ -318,9 +297,9 @@
             serverSide: true,
             info: false,
             ajax: {
-                url: '{{ route('getdata_ratio') }}',
+                url: '{{ route('get-marker-ratio') }}',
                 data: function(d) {
-                    d.cbomarker = $('#cbomarker').val();
+                    d.marker_input_kode = $('#marker_input_kode').val();
                 },
             },
             columns: [
@@ -331,64 +310,62 @@
                     data: 'ratio'
                 },
                 {
-                    data: 'cut_qty'
+                    data: 'qty_cutting'
                 }
             ]
         });
 
-        function getno_marker() {
+        function getMarkerOptions() {
             clearForm();
 
-            let cbows = document.form.cbows.value;
-            let html = $.ajax({
+            let options = $.ajax({
                 type: "POST",
-                url: '{{ route('getno_marker') }}',
+                url: '{{ route('get-marker-options') }}',
                 data: {
-                    cbows: cbows
+                    act_costing_id: document.form.act_costing_id.value
                 },
                 async: false
             }).responseText;
 
-            console.log(html != "");
+            if (options != "") {
+                $("#marker_input_kode").html(options);
 
-            if (html != "") {
-                $("#cbomarker").html(html);
-
-                $("#cbomarker").prop("disabled", false);
-                $("#txtqtyply").prop("readonly", false);
+                $("#marker_input_kode").prop("disabled", false);
+                $("#qty_ply").prop("readonly", false);
             }
         };
 
-        function getdata_marker() {
+        function getMarkerInfo() {
             clearForm();
 
-            let cbomarker = document.form.cbomarker.value;
+            console.log($('#marker_input_kode').val());
+
             jQuery.ajax({
-                url: '{{ route('getdata_marker') }}',
+                url: '{{ route('get-marker-info') }}',
                 method: 'get',
                 data: {
-                    cri_item: $('#cbomarker').val()
+                    marker_input_kode: $('#marker_input_kode').val()
                 },
                 dataType: 'json',
                 success: function(response) {
-                    document.getElementById('txtpanel').value = response.panel;
-                    document.getElementById('txtcolor').value = response.color;
-                    document.getElementById('txtbuyer').value = response.buyer;
-                    document.getElementById('txtstyle').value = response.style;
-                    document.getElementById('txt_p_marker').value = response.panjang_marker;
-                    document.getElementById('txt_unit_p_marker').value = response.unit_panjang_marker;
-                    document.getElementById('txt_comma_p_marker').value = response.comma_marker;
-                    document.getElementById('txt_unit_comma_p_marker').value = response.unit_comma_marker;
-                    document.getElementById('txt_po_marker').value = response.po_marker;
-                    document.getElementById('txt_l_marker').value = response.lebar_marker;
-                    document.getElementById('txt_unit_l_marker').value = response.unit_lebar_marker;
-                    document.getElementById('txt_qty_gelar').value = response.gelar_qty_balance ? response.gelar_qty_balance : response.gelar_qty;
-                    document.getElementById('txt_ws').value = response.act_costing_ws;
-                    document.getElementById('txt_cons_ws').value = response.cons_ws;
-                    document.getElementById('txt_cons_marker').value = response.cons_marker;
-                    document.getElementById('hitungmarker').value = response.gelar_qty_balance ? response.gelar_qty_balance : response.gelar_qty;
-                    document.getElementById('txtid_marker').value = response.kode;
-                    document.getElementById('tipe_form').value = response.tipe_marker == "bulk marker" && response.status_marker == "active" ? "Pilot to Bulk" : capitalizeFirstLetter((response.tipe_marker).replace(' marker', ""));
+                    document.getElementById('act_costing_ws').value = response.act_costing_ws;
+                    document.getElementById('panel').value = response.panel;
+                    document.getElementById('color').value = response.color;
+                    document.getElementById('buyer').value = response.buyer;
+                    document.getElementById('style').value = response.style;
+                    document.getElementById('marker_input_kode').value = response.kode;
+                    document.getElementById('p_marker').value = response.panjang_marker;
+                    document.getElementById('unit_p_marker').value = response.unit_panjang_marker;
+                    document.getElementById('comma_p_marker').value = response.comma_marker;
+                    document.getElementById('unit_comma_p_marker').value = response.unit_comma_marker;
+                    document.getElementById('po_marker').value = response.po_marker;
+                    document.getElementById('l_marker').value = response.lebar_marker;
+                    document.getElementById('unit_l_marker').value = response.unit_lebar_marker;
+                    document.getElementById('cons_ws').value = response.cons_ws;
+                    document.getElementById('cons_marker').value = response.cons_marker;
+                    document.getElementById('qty_gelar_marker').value = response.gelar_qty_balance_marker ? response.gelar_qty_balance_marker : response.gelar_qty_marker;
+                    document.getElementById('qty_ply_marker').value = response.gelar_qty_balance_marker ? response.gelar_qty_balance_marker : response.gelar_qty_marker;
+                    document.getElementById('tipe_form').value = response.tipe_marker == "bulk" && response.status_marker == "active" ? "Pilot to Bulk" : capitalizeFirstLetter((response.tipe_marker).replace(' marker', ""));
                     document.getElementById('notes').value = response.notes ? response.notes : (response.tipe_marker == "bulk marker" && response.status_marker == "active" ? "Pilot to Bulk" : capitalizeFirstLetter((response.tipe_marker).replace(' marker', "")));
                 },
                 error: function(request, status, error) {
@@ -399,52 +376,58 @@
             datatable.ajax.reload();
         };
 
-        function sum() {
-            let hitungmarker = document.getElementById('txt_qty_gelar').value;
-            let hitungcut = document.getElementById('txtqty_ply_cut').value;
-            document.getElementById("hitungcut").value = +hitungcut;
-            let result = parseFloat(hitungmarker) / parseFloat(hitungcut);
-            let modulus = Math.ceil(parseFloat(hitungmarker) % parseFloat(hitungcut))
-            let result_fix = Math.ceil(result)
-            let jumlah_form = document.getElementById("jumlah_form").value;
+        function calculation() {
+            let qtyPlyMarker = document.getElementById('qty_ply_marker').value;
 
-            if (!isNaN(result_fix)) {
-                document.getElementById("hitungform").value = result_fix;
+            let qtyPly = document.getElementById('qty_ply').value;
+            let jumlahForm = document.getElementById("jumlah_form").value;
+
+            document.getElementById("qty_ply_cutting").value = +qtyPly;
+
+            let result = Math.ceil(parseFloat(qtyPlyMarker) / parseFloat(qtyPly));
+            let modulus = qtyPlyMarker > qtyPly ? Math.ceil(parseFloat(qtyPlyMarker) % parseFloat(qtyPly)) : 0;
+
+            if (!isNaN(result)) {
+                document.getElementById("total_form").value = result;
                 document.getElementById("sisa").value = modulus;
-                document.getElementById("jumlah_form").value = result_fix;
-                document.getElementById("qty_ply_form").value = (jumlah_form * hitungcut) > hitungmarker ? hitungmarker : (jumlah_form * hitungcut);
+                document.getElementById("jumlah_form").value = result;
+                document.getElementById("qty_ply_form").value = (jumlahForm * qtyPly) > qtyPlyMarker ? qtyPlyMarker : (jumlahForm * qtyPly);
             }
         }
 
-        function customSum() {
-            let qtyPlyMarker = document.getElementById("hitungmarker").value;
+        function customCalculation() {
+            let qtyPlyMarker = document.getElementById("qty_ply_marker").value;
 
-            let qtyPly = document.getElementById("txtqty_ply_cut").value;
+            let qtyPly = document.getElementById("qty_ply").value;
             let jumlahForm = document.getElementById("jumlah_form").value;
 
             let qtyPlyForm = qtyPly * jumlahForm;
-            let modulus = qtyPlyMarker % qtyPly;
+            let modulus = qtyPlyMarker > qtyPly ? Math.ceil(parseFloat(qtyPlyMarker) % parseFloat(qtyPly)) : 0;
             let maxForm = Math.floor(qtyPlyMarker/qtyPly) + (modulus > 0 ? 1 : 0);
 
             if (jumlahForm > maxForm) {
-                sum();
+                calculation();
             } else {
-                console.log(qtyPly, maxForm);
-                document.getElementById("hitungform").value = jumlahForm;
+                document.getElementById("total_form").value = jumlahForm;
                 document.getElementById("sisa").value = modulus;
                 document.getElementById("qty_ply_form").value = (qtyPlyForm > qtyPlyMarker ? qtyPlyMarker : qtyPlyForm);
             }
         }
 
         function clearForm() {
-            document.getElementById('txtqty_ply_cut').value = "";
+            document.getElementById('qty_ply').value = "";
             document.getElementById('jumlah_form').value = "";
-            document.getElementById('hitungmarker').value = "";
-            document.getElementById('hitungcut').value = "";
-            document.getElementById('hitungform').value = "";
+            document.getElementById('qty_ply_marker').value = "";
+            document.getElementById('qty_ply_cutting').value = "";
+            document.getElementById('total_form').value = "";
             document.getElementById('qty_ply_form').value = "";
             document.getElementById('sisa').value = "";
             document.getElementById('notes').value = "";
+        }
+
+        function clearStep() {
+            $('#act_costing_id').val("").trigger("change");
+            $("#marker_input_kode").prop("disabled", true);
         }
 
         document.getElementById("store-spreading").onkeypress = function(e) {
@@ -453,52 +436,6 @@
                 e.preventDefault();
                 console.log('enter key prevented');
             }
-        }
-
-        function submitSpreadingForm(e, evt) {
-            evt.preventDefault();
-
-            $("input[type=submit][clicked=true]").attr('disabled', true);
-
-            evt.preventDefault();
-
-            clearModified();
-
-            $.ajax({
-                url: e.getAttribute('action'),
-                type: e.getAttribute('method'),
-                data: new FormData(e),
-                processData: false,
-                contentType: false,
-                success: async function(res) {
-                    $("input[type=submit][clicked=true]").removeAttr('disabled');
-
-                    if (res.status == 200) {
-                        console.log(res);
-
-                        e.reset();
-
-                        $('#cbows').val("").trigger("change");
-                        $("#cbomarker").prop("disabled", true);
-
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Data Spreading berhasil disimpan',
-                            html: "No. Form Cut : <br>" + res.message,
-                            showCancelButton: false,
-                            showConfirmButton: true,
-                            confirmButtonText: 'Oke',
-                            timer: 5000,
-                            timerProgressBar: true
-                        }).then((result) => {
-                            location.reload();
-                        })
-
-                        datatable.ajax.reload();
-                    }
-                },
-
-            });
         }
     </script>
 @endsection

@@ -1,16 +1,5 @@
 @extends('layouts.index')
 
-@section('custom-link')
-    <!-- DataTables -->
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
-
-    <!-- Select2 -->
-    <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
-@endsection
-
 @section('content')
     <div class="card card-sb">
         <div class="card-header">
@@ -26,11 +15,11 @@
                     <div class="d-flex align-items-end gap-3 mb-3">
                         <div>
                             <label class="form-label"><small>Tanggal Awal</small></label>
-                            <input type="date" class="form-control form-control-sm" onchange="dataTableReload()" id="tgl-awal" name="tgl_awal">
+                            <input type="date" class="form-control form-control-sm" onchange="dataTableReload()" id="tanggal_awal" name="tanggal_awal">
                         </div>
                         <div>
                             <label class="form-label"><small>Tanggal Akhir</small></label>
-                            <input type="date" class="form-control form-control-sm" onchange="dataTableReload()" id="tgl-akhir" name="tgl_akhir" value="{{ date('Y-m-d') }}">
+                            <input type="date" class="form-control form-control-sm" onchange="dataTableReload()" id="tanggal_akhir" name="tanggal_akhir" value="{{ date('Y-m-d') }}">
                         </div>
                         <div>
                             <button class="btn btn-primary btn-sm" onclick="dataTableReload()"><i class="fa fa-search"></i> </button>
@@ -51,7 +40,7 @@
                     <thead>
                         <tr>
                             <th>Action</th>
-                            <th>Tanggal Form</th>
+                            <th>Tanggal</th>
                             <th>No. Form</th>
                             <th>No. Meja</th>
                             <th>No. Marker</th>
@@ -59,7 +48,7 @@
                             <th>Style</th>
                             <th>Color</th>
                             <th>Panel</th>
-                            <th class="align-bottom" style="text-align: left !important;">Status</th>
+                            <th class="text-start align-bottom">Status</th>
                             <th>Size Ratio</th>
                             <th>Qty Ply</th>
                             <th>Ket.</th>
@@ -85,11 +74,10 @@
                         <div class="modal-body" style="max-height: 65vh !important;">
                             <div class="row">
                                 <input type="hidden" id="edit_id" name="edit_id">
-                                <input type="hidden" id="edit_marker_id" name="edit_marker_id">
                                 <div class="col-6 col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label"><small>Tanggal Form</small></label>
-                                        <input type="text" class="form-control" id="edit_tgl_form_cut" name="edit_tgl_form_cut" value="" readonly />
+                                        <input type="text" class="form-control" id="edit_tanggal" name="edit_tanggal" value="" readonly />
                                     </div>
                                 </div>
                                 <div class="col-6 col-md-4">
@@ -101,13 +89,13 @@
                                 <div class="col-6 col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label"><small>Marker</small></label>
-                                        <input type="text" class="form-control" id="edit_id_marker" name="edit_id_marker" value="" readonly />
+                                        <input type="text" class="form-control" id="edit_marker_input_kode" name="edit_marker_input_kode" value="" readonly />
                                     </div>
                                 </div>
                                 <div class="col-6 col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label"><small>WS</small></label>
-                                        <input type="text" class="form-control" id="edit_ws" name="edit_ws" value="" readonly />
+                                        <input type="text" class="form-control" id="edit_act_costing_ws" name="edit_act_costing_ws" value="" readonly />
                                     </div>
                                 </div>
                                 <div class="col-6 col-md-4">
@@ -167,7 +155,7 @@
                                 <div class="col-4 col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label"><small>Gelar QTY</small></label>
-                                        <input type="text" class="form-control" id="edit_gelar_qty" name="edit_gelar_qty" value="" readonly />
+                                        <input type="text" class="form-control" id="edit_gelar_qty_marker" name="edit_gelar_qty_marker" value="" readonly />
                                     </div>
                                 </div>
                                 <div class="col-4 col-md-3">
@@ -197,10 +185,10 @@
                                 <div class="col-4 col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label"><small>No. Meja</small></label>
-                                        <select class="form-select form-select-sm select2bs4" aria-label="Default select example" id="edit_no_meja" name="edit_no_meja">
+                                        <select class="form-select form-select-sm select2manual" id="edit_meja_id" name="edit_meja_id">
                                             <option value="">-</option>
-                                            @foreach ($meja as $m)
-                                            <option value="{{ $m->id }}">{{ strtoupper($m->name) }}</option>
+                                            @foreach ($users as $user)
+                                                <option value="{{ $user->id }}">{{ strtoupper($user->name) }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -245,16 +233,16 @@
                         </div>
                         <div class="modal-body" style="max-height: 65vh !important;">
                             <div class="row">
-                                <input type="hidden" id="edit_id_status" name="edit_id_status">
+                                <input type="hidden" id="edit_status_id" name="edit_status_id">
                                 <div class="col-md-12">
                                     <div class="mb-3">
                                         <label class="form-label">Status</label>
-                                        <select class="form-select select2bs4stat" name="edit_status" id="edit_status">
-                                            <option value="SPREADING">SPREADING</option>
-                                            <option value="PENGERJAAN FORM CUTTING">PENGERJAAN FORM CUTTING</option>
-                                            <option value="PENGERJAAN FORM CUTTING DETAIL">PENGERJAAN FORM CUTTING DETAIL</option>
-                                            <option value="PENGERJAAN FORM CUTTING SPREAD">PENGERJAAN FORM CUTTING SPREAD</option>
-                                            <option value="SELESAI PENGERJAAN">SELESAI PENGERJAAN</option>
+                                        <select class="form-select select2manual" name="edit_status" id="edit_status">
+                                            <option value="idle">IDLE</option>
+                                            <option value="form">PENGERJAAN FORM CUTTING</option>
+                                            <option value="form detail">PENGERJAAN FORM CUTTING DETAIL</option>
+                                            <option value="form spreading">PENGERJAAN FORM CUTTING SPREADING</option>
+                                            <option value="finish">PENGERJAAN SELESAI</option>
                                         </select>
                                     </div>
                                 </div>
@@ -272,32 +260,6 @@
 @endsection
 
 @section('custom-script')
-    <!-- DataTables  & Plugins -->
-    <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
-
-    <!-- Select2 -->
-    <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
-    <script>
-        $(document).on('select2:open', () => {
-            document.querySelector('.select2-search__field').focus();
-        });
-
-        $('.select2').select2();
-
-        $('.select2bs4').select2({
-            theme: 'bootstrap4',
-            dropdownParent: $("#editMejaModal")
-        });
-
-        $('.select2bs4stat').select2({
-            theme: 'bootstrap4',
-            dropdownParent: $("#editStatusModal")
-        });
-    </script>
-
     <script>
         $(document).ready(() => {
             let oneWeeksBefore = new Date(new Date().setDate(new Date().getDate() - 7));
@@ -306,10 +268,20 @@
             let oneWeeksBeforeYear = oneWeeksBefore.getFullYear();
             let oneWeeksBeforeFull = oneWeeksBeforeYear + '-' + oneWeeksBeforeMonth + '-' + oneWeeksBeforeDate;
 
-            $("#tgl-awal").val(oneWeeksBeforeFull).trigger("change");
+            $("#tanggal_awal").val(oneWeeksBeforeFull).trigger("change");
 
             window.addEventListener("focus", () => {
                 dataTableReload();
+            });
+
+            $('#edit_meja_id').select2({
+                theme: 'bootstrap4',
+                dropdownParent: $("#editMejaModal")
+            });
+
+            $('#edit_status').select2({
+                theme: 'bootstrap4',
+                dropdownParent: $("#editStatusModal")
             });
         });
 
@@ -320,8 +292,8 @@
             ajax: {
                 url: '{{ route('spreading') }}',
                 data: function(d) {
-                    d.dateFrom = $('#tgl-awal').val();
-                    d.dateTo = $('#tgl-akhir').val();
+                    d.tanggal_awal = $('#tanggal_awal').val();
+                    d.tanggal_akhir = $('#tanggal_akhir').val();
                 },
             },
             columns: [
@@ -329,19 +301,19 @@
                     data: 'id'
                 },
                 {
-                    data: 'tgl_form_cut'
+                    data: 'tanggal'
                 },
                 {
                     data: 'no_form'
                 },
                 {
-                    data: 'nama_meja'
+                    data: 'name'
                 },
                 {
-                    data: 'id_marker'
+                    data: 'marker_input_kode'
                 },
                 {
-                    data: 'ws'
+                    data: 'act_costing_ws'
                 },
                 {
                     data: 'style'
@@ -353,7 +325,7 @@
                     data: 'panel'
                 },
                 {
-                    data: 'status'
+                    data: 'status_form'
                 },
                 {
                     data: 'marker_details'
@@ -365,7 +337,7 @@
                     data: 'notes'
                 },
                 {
-                    data: 'tgl_plan'
+                    data: 'tanggal_plan'
                 },
             ],
             columnDefs: [
@@ -374,15 +346,15 @@
                     render: (data, type, row, meta) => {
                         let color = "";
 
-                        if (row.status == 'SELESAI PENGERJAAN') {
+                        if (row.status == 'finish') {
                             color = '#087521';
-                        } else if (row.status == 'PENGERJAAN MARKER') {
+                        } else if (row.status == 'marker') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING') {
+                        } else if (row.status == 'form') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING DETAIL') {
+                        } else if (row.status == 'form detail') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING SPREAD') {
+                        } else if (row.status == 'form spreading') {
                             color = '#2243d6';
                         }
 
@@ -396,18 +368,18 @@
                         icon = "";
 
                         switch (data) {
-                            case "SPREADING":
-                            case "PENGERJAAN PILOT MARKER":
-                            case "PENGERJAAN PILOT DETAIL":
+                            case "idle":
+                            case "pilot marker":
+                            case "pilot form detail":
                                 icon = `<i class="fas fa-file fa-lg"></i>`;
                                 break;
-                            case "PENGERJAAN MARKER":
-                            case "PENGERJAAN FORM CUTTING":
-                            case "PENGERJAAN FORM CUTTING DETAIL":
-                            case "PENGERJAAN FORM CUTTING SPREAD":
+                            case "marker":
+                            case "form":
+                            case "form detail":
+                            case "form spreading":
                                 icon = `<i class="fas fa-sync-alt fa-spin fa-lg" style="color: #2243d6;"></i>`;
                                 break;
-                            case "SELESAI PENGERJAAN":
+                            case "finish":
                                 icon = `<i class="fas fa-check fa-lg" style="color: #087521;"></i>`;
                                 break;
                         }
@@ -420,15 +392,15 @@
                     render: (data, type, row, meta) => {
                         let color = "";
 
-                        if (row.status == 'SELESAI PENGERJAAN') {
+                        if (row.status == 'finish') {
                             color = '#087521';
-                        } else if (row.status == 'PENGERJAAN MARKER') {
+                        } else if (row.status == 'marker') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING') {
+                        } else if (row.status == 'form') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING DETAIL') {
+                        } else if (row.status == 'form detail') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING SPREAD') {
+                        } else if (row.status == 'form spreading') {
                             color = '#2243d6';
                         }
 
@@ -440,8 +412,8 @@
                     render: (data, type, row, meta) => {
                         return `
                             <div class="progress border border-sb position-relative" style="min-width: 50px;height: 21px">
-                                <p class="position-absolute" style="top: 50%;left: 50%;transform: translate(-50%, -50%);">`+row.total_lembar+`/`+row.qty_ply+`</p>
-                                <div class="progress-bar" style="background-color: #75baeb;width: `+((row.total_lembar/row.qty_ply)*100)+`%" role="progressbar"></div>
+                                <p class="position-absolute" style="top: 50%;left: 50%;transform: translate(-50%, -50%);">`+row.total_ply+`/`+row.qty_ply+`</p>
+                                <div class="progress-bar" style="background-color: #75baeb;width: `+((row.total_ply/row.qty_ply)*100)+`%" role="progressbar"></div>
                             </div>
                         `;
                     }
@@ -449,20 +421,23 @@
                 {
                     targets: [0],
                     render: (data, type, row, meta) => {
-                        let btnEditMeja = row.status == 'SPREADING' ? "<a href='javascript:void(0);' class='btn btn-primary btn-sm' onclick='editData(" + JSON.stringify(row) + ", \"editMejaModal\", [{\"function\" : \"dataTableRatioReload()\"}]);'><i class='fa fa-edit'></i></a>" : "";
-                        let btnEditStatus = row.status != 'SPREADING' ? "<a href='javascript:void(0);' class='btn btn-primary btn-sm' onclick='editData(" + JSON.stringify({'id_status' : row.id, 'status' : row.status}) + ", \"editStatusModal\", [{\"function\" : \"dataTableRatio1Reload()\"}]);'><i class='fa fa-cog'></i></a>" : "";
-                        let btnDelete = row.status == 'SPREADING' ? "<a href='javascript:void(0);' class='btn btn-danger btn-sm' data='"+JSON.stringify(row)+"' data-url='"+'{{ route('destroy-spreading') }}'+"/"+row.id+"' onclick='deleteData(this);'><i class='fa fa-trash'></i></a>" : "";
+                        let btnEditMeja = row.status == 'idle' ? "<a href='javascript:void(0);' class='btn btn-primary btn-sm' onclick='editData(" + JSON.stringify(row) + ", \"editMejaModal\", [{\"function\" : \"dataTableRatioReload()\"}]);'><i class='fa fa-edit'></i></a>" : "";
+                        let btnEditStatus = row.status != 'idle' ? "<a href='javascript:void(0);' class='btn btn-primary btn-sm' onclick='editData(" + JSON.stringify({'status_id' : row.id, 'status' : row.status}) + ", \"editStatusModal\", [{\"function\" : \"dataTableRatio1Reload()\"}]);'><i class='fa fa-cog'></i></a>" : "";
+                        let btnDelete = row.status == 'idle' ? "<a href='javascript:void(0);' class='btn btn-danger btn-sm' data='"+JSON.stringify(row)+"' data-url='"+'{{ route('destroy-spreading') }}'+"/"+row.id+"' onclick='deleteData(this);'><i class='fa fa-trash'></i></a>" : "";
                         let btnProcess = "";
 
-                        if (row.tipe_form_cut == 'MANUAL') {
-                            btnProcess = (row.qty_ply > 0 && row.no_meja != '' && row.no_meja != null && row.app == 'Y') || row.status != 'SPREADING' ?
-                                `<a class='btn btn-success btn-sm' href='{{ route('process-manual-form-cut') }}/` + row.id + `' data-bs-toggle='tooltip' target='_blank'><i class='fa `+ (row.status == "SELESAI PENGERJAAN" ? `fa-search-plus` : `fa-plus`) +`'></i></a>` : "";
-                        } else if (row.tipe_form_cut == 'PILOT') {
-                            btnProcess = (row.qty_ply > 0 && row.no_meja != '' && row.no_meja != null && row.app == 'Y') || row.status != 'SPREADING' ?
-                                `<a class='btn btn-success btn-sm' href='{{ route('process-pilot-form-cut') }}/` + row.id + `' data-bs-toggle='tooltip' target='_blank'><i class='fa `+(row.status == "SELESAI PENGERJAAN" ? `fa-search-plus` : `fa-plus`)+`'></i></a>` : "";
+                        if (row.tipe_form == 'manual') {
+                            btnProcess = (row.qty_ply > 0 && row.meja_id != '' && row.meja_id != null && row.app == 'y') || row.status != 'idle' ?
+                                `<a class='btn btn-success btn-sm' href='{{ route('process-manual-form-cut') }}/` + row.id + `' data-bs-toggle='tooltip' target='_blank'><i class='fa `+ (row.status == "finish" ? `fa-search-plus` : `fa-plus`) +`'></i></a>` :
+                                "";
+                        } else if (row.tipe_form == 'pilot') {
+                            btnProcess = (row.qty_ply > 0 && row.meja_id != '' && row.meja_id != null && row.app == 'y') || row.status != 'idle' ?
+                                `<a class='btn btn-success btn-sm' href='{{ route('process-pilot-form-cut') }}/` + row.id + `' data-bs-toggle='tooltip' target='_blank'><i class='fa `+(row.status == "finish" ? `fa-search-plus` : `fa-plus`)+`'></i></a>` :
+                                "";
                         } else {
-                            btnProcess = (row.qty_ply > 0 && row.no_meja != '' && row.no_meja != null && row.app == 'Y') || row.status != 'SPREADING' ?
-                                `<a class='btn btn-success btn-sm' href='{{ route('process-form-cut-input') }}/` + row.id + `' data-bs-toggle='tooltip' target='_blank'><i class='fa `+(row.status == "SELESAI PENGERJAAN" ? `fa-search-plus` : `fa-plus`)+`'></i></a>` : "";
+                            btnProcess = (row.qty_ply > 0 && row.meja_id != '' && row.meja_id != null && row.app == 'y') || row.status != 'idle' ?
+                                `<a class='btn btn-success btn-sm' href='{{ route('process-form-cut-input') }}/` + row.id + `' data-bs-toggle='tooltip' target='_blank'><i class='fa `+(row.status == "finish" ? `fa-search-plus` : `fa-plus`)+`'></i></a>` :
+                                "";
                         }
 
                         return `<div class='d-flex gap-1 justify-content-center'>` + btnEditMeja + btnEditStatus + btnProcess + btnDelete + `</div>`;
@@ -473,15 +448,15 @@
                     render: (data, type, row, meta) => {
                         let color = "";
 
-                        if (row.status == 'SELESAI PENGERJAAN') {
+                        if (row.status == 'finish') {
                             color = '#087521';
-                        } else if (row.status == 'PENGERJAAN MARKER') {
+                        } else if (row.status == 'marker') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING') {
+                        } else if (row.status == 'form') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING DETAIL') {
+                        } else if (row.status == 'form detail') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING SPREAD') {
+                        } else if (row.status == 'form spreading') {
                             color = '#2243d6';
                         }
 
@@ -494,10 +469,10 @@
                 }
             ],
             rowCallback: function( row, data, index ) {
-                if (data['tipe_form_cut'] == 'MANUAL') {
+                if (data['tipe_form'] == 'manual') {
                     $('td', row).css('background-color', '#e7dcf7');
                     $('td', row).css('border', '0.15px solid #d0d0d0');
-                } else if (data['tipe_form_cut'] == 'PILOT') {
+                } else if (data['tipe_form'] == 'pilot') {
                     $('td', row).css('background-color', '#c5e0fa');
                     $('td', row).css('border', '0.15px solid #d0d0d0');
                 }
@@ -509,9 +484,9 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: '{{ route('getdata_ratio') }}',
+                url: '{{ route('get-marker-ratio') }}',
                 data: function(d) {
-                    d.cbomarker = $('#edit_marker_id').val();
+                    d.marker_input_kode = $('#edit_marker_input_kode').val();
                 },
             },
             columns: [
@@ -532,9 +507,9 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: '{{ route('getdata_ratio') }}',
+                url: '{{ route('get-marker-ratio') }}',
                 data: function(d) {
-                    d.cbomarker = $('#edit_marker_id').val();
+                    d.marker_input_kode = $('#edit_marker_input_kode').val();
                 },
             },
             columns: [

@@ -110,7 +110,7 @@ class MarkerController extends Controller
             $markerDetail = MarkerDetail::selectRaw("
                     marker_input_detail.so_det_id,
                     marker_input.panel,
-                    SUM(marker_input_detail.cut_qty) total_cut_qty
+                    SUM(marker_input_detail.qty_cutting) total_qty_cutting
                 ")->
                 leftJoin('marker_input', 'marker_input.kode', '=', 'marker_input_detail.marker_input_kode')->
                 where('marker_input.cancel', 'N')->
@@ -188,7 +188,7 @@ class MarkerController extends Controller
                 master_sb_ws.size,
                 master_sb_ws.qty order_qty,
                 COALESCE(marker_input_detail.ratio, 0) ratio,
-                COALESCE(marker_input_detail.cut_qty, 0) cut_qty
+                COALESCE(marker_input_detail.qty_cutting, 0) qty_cutting
             ")->
             where("master_sb_ws.id_act_cost", $request->act_costing_id)->
             where("master_sb_ws.color", $request->color);
@@ -342,7 +342,7 @@ class MarkerController extends Controller
             "cons_piping_marker" => "required|numeric|min:0"
         ]);
 
-        foreach ($request["cut_qty"] as $qty) {
+        foreach ($request["qty_cutting"] as $qty) {
             $totalQty += $qty;
         }
 
@@ -384,7 +384,7 @@ class MarkerController extends Controller
                     "so_det_id" => $request["so_det_id"][$i],
                     "size" => $request["size"][$i],
                     "ratio" => $request["ratio"][$i],
-                    "cut_qty" => $request["cut_qty"][$i],
+                    "qty_cutting" => $request["qty_cutting"][$i],
                     "cancel" => 'N',
                     "created_by" => Auth::user()->id,
                     "created_at" => $timestamp,
@@ -740,7 +740,7 @@ class MarkerController extends Controller
         ]);
 
         $totalQty = 0;
-        foreach ($request["cut_qty"] as $qty) {
+        foreach ($request["qty_cutting"] as $qty) {
             $totalQty += $qty;
         }
 
@@ -783,7 +783,7 @@ class MarkerController extends Controller
                     $markerDetail->update([
                         "size" => $request["size"][$i],
                         "ratio" => $request["ratio"][$i],
-                        "cut_qty" => $request["cut_qty"][$i],
+                        "qty_cutting" => $request["qty_cutting"][$i],
                         "cancel" => "N",
                         "created_at" => $timestamp,
                         "updated_at" => $timestamp,
@@ -794,7 +794,7 @@ class MarkerController extends Controller
                         "so_det_id" => $request["so_det_id"][$i],
                         "size" => $request["size"][$i],
                         "ratio" => $request["ratio"][$i],
-                        "cut_qty" => $request["cut_qty"][$i],
+                        "qty_cutting" => $request["qty_cutting"][$i],
                         "cancel" => 'N',
                         "created_at" => $timestamp,
                         "updated_at" => $timestamp,

@@ -117,7 +117,7 @@
                     </div>
                     <input type="hidden" class="form-control" id="jumlah_part_detail" name="jumlah_part_detail" value="1" readonly>
                 </div>
-                <button type="submit" class="btn btn-success btn-block fw-bold mt-3" id="submit-button">SIMPAN</button>
+                <button type="submit" class="btn btn-success btn-block fw-bold mt-3" id="submit-button"><i class="fa fa-save"></i> SIMPAN</button>
             </div>
         </div>
     </form>

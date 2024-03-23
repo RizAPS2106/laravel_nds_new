@@ -205,7 +205,7 @@
                             <th></th>
                             <th></th>
                             <th id="total_ratio"></th>
-                            <th id="total_cut_qty"></th>
+                            <th id="total_qty_cutting"></th>
                         </tr>
                     </tfoot>
                 </table>
@@ -224,7 +224,7 @@
         // Initial Window On Load Event
         $(document).ready(async function () {
             // Call Get Total Cut Qty ( set sum cut qty variable )
-            getTotalCutQty($("#act_costing_id").val(), $("#color").val(), $("#panel").val());
+            gettotalQtyCutting($("#act_costing_id").val(), $("#color").val(), $("#panel").val());
 
             // Marker Type Default Value
             $("#tipe_marker").val("regular").trigger("change");
@@ -247,7 +247,7 @@
         });
 
         // Get & Set Total Cut Qty Based on Order WS and Order Color ( to know remaining cut qty )
-        async function getTotalCutQty(actCostingId, color, panel) {
+        async function gettotalQtyCutting(actCostingId, color, panel) {
             sumCutQty = await $.ajax({
                 url: '{{ route("create-marker") }}',
                 type: 'get',
@@ -372,7 +372,7 @@
             let sumCutQtyData = sumCutQty.find(o => o.so_det_id == soDetId && o.panel == $("#panel").val());
 
             // Calculate Remaining Cut Qty
-            let remain = orderQty - (sumCutQtyData ? sumCutQtyData.total_cut_qty : 0);
+            let remain = orderQty - (sumCutQtyData ? sumCutQtyData.total_qty_cutting : 0);
 
             return remain;
         }
@@ -490,7 +490,7 @@
                     targets: [9],
                     render: (data, type, row, meta) => {
                         // Hidden Cut Qty Input
-                        return '<input type="number" id="cut-qty-' + meta.row + '" name="cut_qty['+meta.row+']" readonly />'
+                        return '<input type="number" id="qty-cutting-' + meta.row + '" name="qty_cutting['+meta.row+']" readonly />'
                     }
                 }
             ],
@@ -587,7 +587,7 @@
             let gelarQty = document.getElementById('gelar_qty_marker').value;
 
             // Cut Qty Formula
-            document.getElementById('cut-qty-'+id).value = ratio * gelarQty;
+            document.getElementById('qty-cutting-'+id).value = ratio * gelarQty;
 
             // Call Calculate Total Ratio Function ( for order qty datatable summary )
             calculateTotalRatio();
@@ -599,18 +599,18 @@
             let totalSize = document.getElementById('jumlah_so_det').value;
 
             let totalRatio = 0;
-            let totalCutQty = 0;
+            let totalQtyCutting = 0;
 
             // Looping Over Sizes Input
             for (let i = 0; i < totalSize; i++) {
                 // Sum Ratio and Cut Qty
                 totalRatio += Number(document.getElementById('ratio-'+i).value);
-                totalCutQty += Number(document.getElementById('cut-qty-'+i).value);
+                totalQtyCutting += Number(document.getElementById('qty-cutting-'+i).value);
             }
 
             // Set Ratio and Cut Qty ( order qty datatable summary )
             document.querySelector("table#orderQtyDatatable tfoot tr th:nth-child(7)").innerText = totalRatio;
-            document.querySelector("table#orderQtyDatatable tfoot tr th:nth-child(8)").innerText = totalCutQty;
+            document.querySelector("table#orderQtyDatatable tfoot tr th:nth-child(8)").innerText = totalQtyCutting;
         }
 
         // Calculate All Cut Qty at Once Based on Spread Qty
@@ -626,7 +626,7 @@
                 let ratio = document.getElementById('ratio-'+i).value;
 
                 // Cut Qty Formula
-                document.getElementById('cut-qty-'+i).value = ratio * gelarQty;
+                document.getElementById('qty-cutting-'+i).value = ratio * gelarQty;
             }
 
             // Call Calculate Total Ratio Function ( for order qty datatable summary )
@@ -689,7 +689,7 @@
                         })
 
                         // Call Get Total Cut Qty ( update sum cut qty variable )
-                        getTotalCutQty($("#act_costing_id").val(), $("#color").val(), $("#panel").val());
+                        gettotalQtyCutting($("#act_costing_id").val(), $("#color").val(), $("#panel").val());
 
                         // Reset Step ( back to step one )
                         resetStep();

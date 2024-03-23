@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cutting;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\Controller;
 
@@ -33,89 +34,88 @@ class SpreadingController extends Controller
             $additionalQuery = "";
 
             if ($request->dateFrom) {
-                $additionalQuery .= " and a.tgl_form_cut >= '" . $request->dateFrom . "' ";
+                $additionalQuery .= " and form_cut_input.tanggal >= '" . $request->tanggal_awal . "' ";
             }
 
             if ($request->dateTo) {
-                $additionalQuery .= " and a.tgl_form_cut <= '" . $request->dateTo . "' ";
+                $additionalQuery .= " and form_cut_input.tanggal <= '" . $request->tanggal_akhir . "' ";
             }
 
             $keywordQuery = "";
             if ($request->search["value"]) {
                 $keywordQuery = "
                     and (
-                        a.id_marker like '%" . $request->search["value"] . "%' OR
-                        a.no_meja like '%" . $request->search["value"] . "%' OR
-                        a.no_form like '%" . $request->search["value"] . "%' OR
-                        a.tgl_form_cut like '%" . $request->search["value"] . "%' OR
-                        b.act_costing_ws like '%" . $request->search["value"] . "%' OR
-                        panel like '%" . $request->search["value"] . "%' OR
-                        b.color like '%" . $request->search["value"] . "%' OR
-                        a.status like '%" . $request->search["value"] . "%' OR
-                        users.name like '%" . $request->search["value"] . "%'
+                        form_cut_input.tanggal like '%" . $request->search["value"] . "%' OR
+                        form_cut_input.no_form like '%" . $request->search["value"] . "%' OR
+                        form_cut_input.meja_username like '%" . $request->search["value"] . "%' OR
+                        form_cut_input.status_form like '%" . $request->search["value"] . "%' OR
+                        marker_input.kode like '%" . $request->search["value"] . "%' OR
+                        marker_input.act_costing_ws like '%" . $request->search["value"] . "%' OR
+                        marker_input.color like '%" . $request->search["value"] . "%' OR
+                        marker_input.panel like '%" . $request->search["value"] . "%'
                     )
                 ";
             }
 
-            $data_spreading = DB::select("
+            $spreadingForms = DB::select("
                 SELECT
-                    a.id,
-                    a.no_meja,
-                    a.id_marker,
-                    a.no_form,
-                    a.no_cut,
-                    a.tgl_form_cut,
-                    b.id marker_id,
-                    b.act_costing_ws ws,
-                    b.style,
-                    CONCAT(b.panel, ' - ', b.urutan_marker) panel,
-                    b.color,
-                    a.status,
-                    users.name nama_meja,
-                    b.panjang_marker,
-                    UPPER(b.unit_panjang_marker) unit_panjang_marker,
-                    b.comma_marker,
-                    UPPER(b.unit_comma_marker) unit_comma_marker,
-                    b.lebar_marker,
-                    UPPER(b.unit_lebar_marker) unit_lebar_marker,
-                    CONCAT(COALESCE(a.total_lembar, '0'), '/', a.qty_ply) ply_progress,
-                    COALESCE(a.qty_ply, 0) qty_ply,
-                    COALESCE(b.gelar_qty, 0) gelar_qty,
-                    COALESCE(a.total_lembar, '0') total_lembar,
-                    b.po_marker,
-                    b.urutan_marker,
-                    b.cons_marker,
-                    UPPER(b.tipe_marker) tipe_marker,
-                    a.tipe_form_cut,
-                    COALESCE(b.notes, '-') notes,
+                    form_cut_input.id,
+                    form_cut_input.marker_input_kode,
+                    marker_input.act_costing_ws,
+                    marker_input.style,
+                    marker_input.color,
+                    CONCAT(marker_input.panel, ' - ', marker_input.urutan_marker) panel,
+                    marker_input.panjang_marker,
+                    UPPER(marker_input.unit_panjang_marker) unit_panjang_marker,
+                    marker_input.comma_marker,
+                    UPPER(marker_input.unit_comma_marker) unit_comma_marker,
+                    marker_input.lebar_marker,
+                    UPPER(marker_input.unit_lebar_marker) unit_lebar_marker,
+                    form_cut_input.tanggal,
+                    form_cut_input.no_form,
+                    form_cut_input.no_cut_form,
+                    form_cut_input.tipe_form,
+                    form_cut_input.status_form,
+                    form_cut_input.meja_id,
+                    users.name,
+                    CONCAT(COALESCE(form_cut_input.total_ply, '0'), '/', COALESCE(form_cut_input.qty_ply, 0)) ply_progress,
+                    COALESCE(form_cut_input.qty_ply, 0) qty_ply,
+                    COALESCE(form_cut_input.total_ply, '0') total_ply,
+                    marker_input.po_marker,
+                    marker_input.urutan_marker,
+                    marker_input.cons_marker,
+                    marker_input.tipe_marker,
+                    COALESCE(marker_input.gelar_qty_marker, 0) gelar_qty_marker,
+                    COALESCE(marker_input.notes, '-') notes,
                     GROUP_CONCAT(DISTINCT CONCAT(marker_input_detail.size, '(', marker_input_detail.ratio, ')') ORDER BY master_size_new.urutan ASC SEPARATOR ', ') marker_details,
-                    cutting_plan.tgl_plan,
+                    cutting_plan.tanggal tanggal_plan,
                     cutting_plan.app
-                FROM `form_cut_input` a
-                left join cutting_plan on cutting_plan.no_form_cut_input = a.no_form
-                left join users on users.id = a.no_meja
-                left join marker_input b on a.id_marker = b.kode and b.cancel = 'N'
-                left join marker_input_detail on b.id = marker_input_detail.marker_id
-                left join master_size_new on marker_input_detail.size = master_size_new.size
-                where
-                    a.id is not null
+                FROM form_cut_input
+                LEFT JOIN cutting_plan ON cutting_plan.no_form = form_cut_input.no_form
+                LEFT JOIN users ON users.id = form_cut_input.meja_id
+                LEFT JOIN marker_input ON form_cut_input.marker_input_kode = marker_input.kode and marker_input.cancel = 'N'
+                LEFT JOIN marker_input_detail ON marker_input.kode = marker_input_detail.marker_input_kode
+                LEFT JOIN master_size_new ON marker_input_detail.size = master_size_new.size
+                WHERE
+                    form_cut_input.id is not null
                     " . $additionalQuery . "
                     " . $keywordQuery . "
-                GROUP BY a.id
+                GROUP BY
+                    form_cut_input.id
                 ORDER BY
-                    FIELD(a.status, 'PENGERJAAN MARKER', 'PENGERJAAN FORM CUTTING', 'PENGERJAAN FORM CUTTING DETAIL', 'PENGERJAAN FORM CUTTING SPREAD', 'SPREADING', 'SELESAI PENGERJAAN'),
-                    FIELD(a.tipe_form_cut, null, 'PILOT', 'NORMAL', 'MANUAL'),
-                    FIELD(a.app, 'Y', 'N', null),
-                    a.no_form desc,
-                    a.updated_at desc
+                    FIELD(form_cut_input.status_form, null, 'marker', 'form', 'form detail', 'form spreading', 'spreading', 'finish'),
+                    FIELD(form_cut_input.tipe_form, null, 'pilot', 'manual', 'normal'),
+                    FIELD(form_cut_input.app, 'y', 'n', null),
+                    form_cut_input.no_form desc,
+                    form_cut_input.updated_at desc
             ");
 
-            return DataTables::of($data_spreading)->toJson();
+            return DataTables::of($spreadingForms)->toJson();
         }
 
-        $meja = User::select("id", "name", "username")->where('type', 'meja')->get();
+        $users = User::select("id", "name", "username")->where('type', 'meja')->get();
 
-        return view('spreading.spreading', ['meja' => $meja, 'page' => 'dashboard-cutting', "subPageGroup" => "proses-cutting", "subPage" => "spreading"]);
+        return view('spreading.spreading', ['users' => $users, 'page' => 'dashboard-cutting', "subPageGroup" => "proses-cutting", "subPage" => "spreading"]);
     }
 
     /**
@@ -125,113 +125,118 @@ class SpreadingController extends Controller
      */
     public function create()
     {
-        $tgl_f = Carbon::today()->toDateString();
-        // dd($tgl_f);
+        $availableOrders = DB::select("
+            select
+                act_costing_id,
+                act_costing_ws
+            from
+                marker_input
+            left join
+                (select marker_input_kode from form_cut_input group by marker_input_kode ) form_marker on marker_input.kode = form_marker.marker_input_kode
+            where
+                marker_input.cancel = 'N' and
+                ((marker_input.gelar_qty_balance_marker is null and form_marker.marker_input_kode is null) or marker_input.gelar_qty_balance_marker > 0)
+            group by
+                act_costing_id
+        ");
 
-        // $data_ws = DB::select("select act_costing_id, act_costing_ws ws from marker_input where tgl_cutting = '$tgl_f' group by act_costing_id");
 
-        $data_ws = DB::select("select act_costing_id, act_costing_ws ws from marker_input a
-        left join (select id_marker from form_cut_input group by id_marker ) b on a.kode = b.id_marker
-        where a.cancel = 'N' and ((a.gelar_qty_balance is null and b.id_marker is null) or a.gelar_qty_balance > 0)
-        group by act_costing_id");
-
-
-        return view('spreading.create-spreading', ['data_ws' => $data_ws, 'page' => 'dashboard-cutting', "subPageGroup" => "proses-cutting", "subPage" => "spreading"]);
+        return view('spreading.create-spreading', ['orders' => $availableOrders, 'page' => 'dashboard-cutting', "subPageGroup" => "proses-cutting", "subPage" => "spreading"]);
     }
 
-    public function getOrderInfo(Request $request)
+    public function getMarkerOptions(Request $request)
     {
-        $order = DB::connection('mysql_sb')->table('act_costing')->selectRaw('act_costing.id, act_costing.kpno, act_costing.styleno, act_costing.qty order_qty, mastersupplier.supplier buyer')->leftJoin('mastersupplier', 'mastersupplier.Id_Supplier', '=', 'act_costing.id_buyer')->where('act_costing.kpno', $request->ws)->first();
+        $markers = DB::select("
+            select
+                *,
+                concat(kode,' - ',color, ' - (',panel, ' - ',urutan_marker, ' )') tampil
+            from
+                marker_input
+                left join (select marker_input_kode from form_cut_input group by marker_input_kode ) form_marker on marker_input.kode = form_marker.marker_input_kode
+            where
+                marker_input.act_costing_id = '" . $request->act_costing_id . "' and
+                (((marker_input.gelar_qty_balance_marker is null or marker_input.gelar_qty_balance_marker = 0) and form_marker.marker_input_kode is null) or marker_input.gelar_qty_balance_marker > 0) and
+                marker_input.cancel = 'N'
+            order by
+                urutan_marker asc
+        ");
 
-        return json_encode($order);
-    }
+        $options = "<option value=''>Pilih No Marker</option>";
 
-    public function getno_marker(Request $request)
-    {
-        $tgl_f = Carbon::today()->toDateString();
-        // $datano_marker = DB::select("select *,  concat(kode,' - ',color, ' - (',panel, ' - ',urutan_marker, ' )') tampil
-        // from marker_input where act_costing_id = '" . $request->cbows . "' and tgl_cutting = '$tgl_f' order by urutan_marker asc");
-        $datano_marker = DB::select("select *,  concat(kode,' - ',color, ' - (',panel, ' - ',urutan_marker, ' )') tampil  from marker_input a
-        left join (select id_marker from form_cut_input group by id_marker ) b on a.kode = b.id_marker
-        where act_costing_id = '" . $request->cbows . "' and (((a.gelar_qty_balance is null or a.gelar_qty_balance = 0) and b.id_marker is null) or a.gelar_qty_balance > 0) and a.cancel = 'N' order by urutan_marker asc");
-        $html = "<option value=''>Pilih No Marker</option>";
-
-        foreach ($datano_marker as $datanomarker) {
-            $html .= " <option value='" . $datanomarker->id . "'>" . $datanomarker->tampil . "</option> ";
+        foreach ($markers as $marker) {
+            $options .= " <option value='" . $marker->kode . "'>" . $marker->kode . "</option> ";
         }
 
-        return $html;
+        return $options;
     }
 
-    public function getdata_marker(Request $request)
+    public function getMarkerInfo(Request $request)
     {
-        $data_marker = DB::select("select a.* from marker_input a
-        where a.id = '" . $request->cri_item . "'");
+        $markerInfo = DB::select("
+            select
+                *
+            from
+                marker_input
+            where kode = '" . $request->marker_input_kode . "'
+        ");
 
-        return json_encode($data_marker ? $data_marker[0] : null);
+        return json_encode($markerInfo ? $markerInfo[0] : null);
     }
 
-    public function getdata_ratio(Request $request)
+    public function getMarkerRatio(Request $request)
     {
-        $markerId = $request->cbomarker ? $request->cbomarker : 0;
-
-        $data_ratio = DB::select("
+        $markerRatio = DB::select("
             select
                 *
             from
                 marker_input_detail
-            where marker_id = '" . $markerId . "'
+            where marker_input_kode = '" . $request->marker_input_kode . "'
         ");
 
-        return DataTables::of($data_ratio)->toJson();
+        return DataTables::of($markerRatio)->toJson();
     }
 
     public function store(Request $request)
     {
         ini_set('max_execution_time', 3600);
 
-        $txttglcut = date('Y-m-d');
         $validatedRequest = $request->validate([
-            "txtqty_ply_cut" => "required",
-            "txtpanel" => "required",
-            "txtcolor" => "required",
-            "txtbuyer" => "required",
-            "txtstyle" => "required",
-            "txt_p_marker" => "required",
-            "txt_unit_p_marker" => "required",
-            "txt_comma_p_marker" => "required",
-            "txt_unit_comma_p_marker" => "required",
-            "txt_po_marker" => "required",
-            "txt_l_marker" => "required",
-            "txt_unit_l_marker" => "required",
-            "txt_qty_gelar" => "required",
-            "txt_ws" => "required",
-            "txt_cons_ws" => "required",
-            "txt_cons_marker" => "required",
-            "txtid_marker" => "required",
+            "act_costing_ws" => "required",
+            "cons_ws" => "required",
+            "panel" => "required",
+            "color" => "required",
+            "buyer" => "required",
+            "style" => "required",
+            "marker_input_kode" => "required",
+            "p_marker" => "required",
+            "unit_p_marker" => "required",
+            "comma_p_marker" => "required",
+            "unit_comma_p_marker" => "required",
+            "l_marker" => "required",
+            "unit_l_marker" => "required",
+            "cons_marker" => "required",
+            "po_marker" => "required",
+            "qty_ply_marker" => "required",
+            "qty_ply_cutting" => "required",
         ]);
 
-        $qtyPlyMarkerModulus = intval($request['hitungmarker']) % intval($request['txtqty_ply_cut']);
         $timestamp = Carbon::now();
-        $formcutDetailData = [];
+        $formCutInputArr = [];
         $message = "";
 
-        if ($request['tarik_sisa']) {
-            $request['hitungform'] = $request['hitungform'] > 1 ? $request['hitungform'] - 1 : $request['hitungform'];
-        }
-
-        $keterangan = $request["notes"];
-
+        // Tipe form beserta keterangan
         if ($request["tipe_form"] != "Pilot") {
-            if ((!$request["notes"] || $request["notes"] == "") && $request["tipe_form"] != "Regular") {
-                $keterangan = $request["tipe_form"];
+            if ((!$request["notes"] || $request["notes"] == "") && $request["tipe_form"] != "normal") {
+                $request["notes"] = $request["tipe_form"];
             }
 
             $request["tipe_form"] = "normal";
         }
 
+        $qtyPlyMarkerModulus = intval($request['qty_ply_marker']) % intval($request['qty_ply_cutting']);
+
         $totalQtyPly = 0;
-        for ($i = 1; $i <= intval($request['hitungform']); $i++) {
+        for ($i = 1; $i <= intval($request['total_form']); $i++) {
             $date = date('Y-m-d');
             $hari = substr($date, 8, 2);
             $bulan = substr($date, 5, 2);
@@ -240,51 +245,51 @@ class SpreadingController extends Controller
             $lastForm = FormCutInput::select("no_form")->whereRaw("no_form LIKE '".$hari."-".$bulan."%'")->orderBy("id", "desc")->first();
             $urutan =  $lastForm ? (str_replace($hari."-".$bulan."-", "", $lastForm->no_form) + $i) : $i;
 
-            $no_form = "$hari-$bulan-$urutan";
+            $noForm = "$hari-$bulan-$urutan";
 
-            $qtyPly = $request['txtqty_ply_cut'];
+            $qtyPly = $request['qty_ply_cutting'];
 
-            if ($i == intval($request['hitungform'])) {
+            if ($i == intval($request['total_form'])) {
                 if ($request['tarik_sisa']) {
-                    $qtyPly = $qtyPlyMarkerModulus > 0 ? $request['txtqty_ply_cut'] + $qtyPlyMarkerModulus : $request['txtqty_ply_cut'];
+                    $qtyPly = $qtyPlyMarkerModulus > 0 ? $request['qty_ply_cutting'] + $qtyPlyMarkerModulus : $request['qty_ply_cutting'];
                 } else {
-                    if (intval($request['hitungform'] > 1)) {
-                        $qtyPly = $qtyPlyMarkerModulus > 0 ? $qtyPlyMarkerModulus : $request['txtqty_ply_cut'];
+                    if (intval($request['total_form'] > 1)) {
+                        $qtyPly = $qtyPlyMarkerModulus > 0 ? $qtyPlyMarkerModulus : $request['qty_ply_cutting'];
                     }
                 }
             }
 
-            array_push($formcutDetailData, [
-                "id_marker" => $request["txtid_marker"],
-                "tipe_form_cut" => $request["tipe_form"],
-                "no_form" => $no_form,
-                "tgl_form_cut" => $txttglcut,
-                "status" => "SPREADING",
-                "user" => "user",
-                "cancel" => "N",
+            array_push($formCutInputArr, [
+                "tanggal" => date('Y-m-d'),
+                "marker_input_kode" => $request["marker_input_kode"],
+                "no_form" => $noForm,
+                "tipe_form" => $request["tipe_form"],
                 "qty_ply" => $qtyPly,
-                "tgl_input" => $timestamp,
-                "notes" => $keterangan,
+                "notes" => $request["notes"],
+                "cancel" => "n",
+                "created_by" => Auth::user()->id,
+                "created_by_username" => Auth::user()->username,
                 "created_at" => $timestamp,
                 "updated_at" => $timestamp,
             ]);
 
             $totalQtyPly += $qtyPly;
-            $message .= "$no_form <br>";
+            $message .= $noForm ."<br>";
         }
 
-        $markerDetailStore = FormCutInput::insert($formcutDetailData);
+        $markerDetailStore = FormCutInput::insert($formCutInputArr);
 
         if ($totalQtyPly > 0) {
-            $updateMarker = Marker::where("kode", $request["txtid_marker"])->
+            $updateMarker = Marker::where("kode", $request["marker_input_kode"])->
                 update([
-                    'gelar_qty_balance' => DB::raw('gelar_qty_balance - '.$totalQtyPly)
+                    'gelar_qty_balance_marker' => DB::raw('gelar_qty_balance_marker - '.$totalQtyPly)
                 ]);
         }
 
         return array(
             "status" => 200,
-            "message" => $message,
+            "message" => "Marker berhasil dijadikan Form <br>". $message,
+            "callback" => "clearStep()",
             "additional" => [],
         );
     }
@@ -400,9 +405,9 @@ class SpreadingController extends Controller
                 ]);
 
                 if ($updateMarkerBalance) {
-                    $spreadingFormDetails = FormCutInputDetail::where('no_form_cut_input', $spreadingForm->no_form_cut_input)->get();
-                    $deleteSpreadingFormDetail = FormCutInputDetail::where('no_form_cut_input', $spreadingForm->no_form_cut_input)->delete();
-                    $deleteCutPlan = CutPlan::where('no_form_cut_input', $spreadingForm->no_form_cut_input)->delete();
+                    $spreadingFormDetails = FormCutInputDetail::where('no_form', $spreadingForm->no_form)->get();
+                    $deleteSpreadingFormDetail = FormCutInputDetail::where('no_form', $spreadingForm->no_form)->delete();
+                    $deleteCutPlan = CutPlan::where('no_form', $spreadingForm->no_form)->delete();
 
                     if ($deleteSpreadingFormDetail) {
                         $idFormDetailLapArr = [];

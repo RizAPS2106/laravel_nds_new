@@ -252,7 +252,7 @@ function editData(e, modal, addons = []) {
             document.getElementById('edit_'+key).value = data[key];
             document.getElementById('edit_'+key).setAttribute('value', data[key]);
 
-            if (document.getElementById('edit_'+key).classList.contains('select2') || document.getElementById('edit_'+key).classList.contains('select2bs4') || document.getElementById('edit_'+key).classList.contains('select2bs4stat') || document.getElementById('edit_'+key).classList.contains('select2manual')) {
+            if (document.getElementById('edit_'+key).classList.contains('select2') || document.getElementById('edit_'+key).classList.contains('select2bs4') || document.getElementById('edit_'+key).classList.contains('select2manual')) {
                 $('#edit_'+key).val(data[key]).trigger('change.select2');
             }
         } else {

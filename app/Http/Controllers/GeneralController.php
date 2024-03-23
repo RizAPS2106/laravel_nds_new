@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Marker;
-use App\Models\MarkerDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+
+use App\Models\Marker;
+use App\Models\MarkerDetail;
+
 use Carbon\Carbon;
 use Yajra\DataTables\Facades\DataTables;
 use PDF;

@@ -8,10 +8,12 @@ use App\Http\Controllers\Marker\MasterSecondaryController;
 use App\Http\Controllers\Marker\PartController;
 use App\Http\Controllers\Marker\MarkerController;
 
+// Cutting
+use App\Http\Controllers\Cutting\SpreadingController;
+
 use App\Http\Controllers\CutPlanController;
 use App\Http\Controllers\CutPlanNewController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\SpreadingController;
 use App\Http\Controllers\FormCutInputController;
 use App\Http\Controllers\ManualFormCutController;
 use App\Http\Controllers\PilotFormCutController;
@@ -172,9 +174,9 @@ Route::middleware('auth')->group(function () {
         Route::controller(SpreadingController::class)->prefix("spreading")->middleware('spreading')->group(function () {
             Route::get('/', 'index')->name('spreading');
             Route::get('/create', 'create')->name('create-spreading');
-            Route::post('/getno_marker', 'getno_marker')->name('getno_marker');
-            Route::get('/getdata_marker', 'getdata_marker')->name('getdata_marker');
-            Route::get('/getdata_ratio', 'getdata_ratio')->name('getdata_ratio');
+            Route::post('/get-marker-options', 'getMarkerOptions')->name('get-marker-options');
+            Route::get('/get-marker-info', 'getMarkerInfo')->name('get-marker-info');
+            Route::get('/get-marker-ratio', 'getMarkerRatio')->name('get-marker-ratio');
             Route::post('/store', 'store')->name('store-spreading');
             Route::put('/update', 'update')->name('update-spreading');
             Route::put('/update-status', 'updateStatus')->name('update-status');
