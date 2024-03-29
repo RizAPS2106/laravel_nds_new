@@ -462,7 +462,7 @@ class MarkerController extends Controller
                 DATE_FORMAT(waktu_mulai, '%d-%m-%Y %T') waktu_mulai,
                 DATE_FORMAT(waktu_selesai, '%d-%m-%Y %T') waktu_selesai,
                 UPPER(u.name) no_meja,
-                a.status_form
+                UPPER(a.status_form) status_form
             from
                 form_cut_input a
             inner join marker_input b on  a.marker_input_kode = b.kode
@@ -485,14 +485,14 @@ class MarkerController extends Controller
 
             $markerFormTable = "";
             foreach ($markerFormData as $markerForm) :
-                $markerForm .= "
+                $markerFormTable .= "
                     <tr>
-                        <td>" .$markerForm->tgl_form_cut. "</td>
+                        <td>" .$markerForm->tanggal_form_cut. "</td>
                         <td>" .$markerForm->no_form. "</td>
                         <td>" . ($markerForm->no_meja ? $markerForm->no_meja : '-') . "</td>
                         <td>" . ($markerForm->waktu_mulai ? $markerForm->waktu_mulai : '-') . "</td>
                         <td>" . ($markerForm->waktu_selesai ? $markerForm->waktu_selesai : '-') . "</td>
-                        <td>" . $markerForm->status . "</td>
+                        <td>" . ($markerForm->status_form ? $markerForm->status_form : '-') . "</td>
                     </tr>
                 ";
             endforeach;
@@ -818,6 +818,17 @@ class MarkerController extends Controller
         );
     }
 
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\Marker  $marker
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(Marker $marker)
+    {
+        //
+    }
+
     public function showGramasi(Request $request)
     {
         $markerGramasi = DB::select("
@@ -839,27 +850,15 @@ class MarkerController extends Controller
         return json_encode($markerGramasi ? $markerGramasi[0] : null);
     }
 
-    public function updateStatus(Request $request, Marker $marker)
-    {
-        $updateStatus = DB::update("
-            update
-                marker_input
-            set
-                cancel = case when cancel = 'Y' then 'N' else 'Y' end
-            where
-                id = '$request->id'
-        ");
-    }
-
-    public function updateMarker(Request $request)
+    public function updateMarkerDetail(Request $request)
     {
         $updateStatus = "";
 
-        if ($request->pilot_status) {
-            $updateStatus .= ", status_marker = '" . $request->pilot_status . "'";
+        if ($request->edit_pilot_status) {
+            $updateStatus .= ", status_marker = '" . $request->edit_pilot_status . "'";
 
-            if ($request->pilot_status == "active") {
-                $updateStatus .= ", tipe_marker = 'bulk marker', notes = 'Pilot to Bulk'";
+            if ($request->edit_pilot_status == "active") {
+                $updateStatus .= ", tipe_marker = 'bulk', notes = 'Pilot to Bulk'";
             }
         }
 
@@ -867,14 +866,14 @@ class MarkerController extends Controller
             update
                 marker_input
             set
-                gramasi = '" . $request->gramasi_marker ." '
+                gramasi_marker = '" . $request->edit_gramasi_marker ." '
                 " . $updateStatus . "
             where
-                id = '".$request->id."'
+                id = '".$request->edit_id."'
         ");
 
         if ($quickUpdateMarker) {
-            $marker = Marker::where('id', $request->id)->first();
+            $marker = Marker::where('id', $request->edit_id)->first();
 
             return array(
                 'status' => 200,
@@ -894,15 +893,16 @@ class MarkerController extends Controller
         );
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Marker  $marker
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Marker $marker)
+    public function updateStatusCancel(Request $request, Marker $marker)
     {
-        //
+        $updateStatus = DB::update("
+            update
+                marker_input
+            set
+                cancel = case when cancel = 'Y' then 'N' else 'Y' end
+            where
+                id = '$request->id'
+        ");
     }
 
     public function printMarker($kodeMarker)

@@ -10,13 +10,14 @@ use App\Http\Controllers\Marker\MarkerController;
 
 // Cutting
 use App\Http\Controllers\Cutting\SpreadingController;
+use App\Http\Controllers\Cutting\FormCutInputController;
+use App\Http\Controllers\Cutting\CutPlanController;
+use App\Http\Controllers\Cutting\ManualFormCutController;
+use App\Http\Controllers\Cutting\PilotFormCutController;
 
-use App\Http\Controllers\CutPlanController;
 use App\Http\Controllers\CutPlanNewController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\FormCutInputController;
-use App\Http\Controllers\ManualFormCutController;
-use App\Http\Controllers\PilotFormCutController;
+
 use App\Http\Controllers\LapPemakaianController;
 use App\Http\Controllers\StockerController;
 use App\Http\Controllers\WarehouseController;
@@ -159,13 +160,13 @@ Route::middleware('auth')->group(function () {
             Route::put('/update/{id?}', 'update')->name('update-marker');
             Route::post('/show', 'show')->name('show-marker');
 
-            // get marker count
+            // Count Marker
             Route::get('/get-count', 'getCount')->name('get-marker-count');
 
             // Additional
             Route::post('/show-gramasi', 'showGramasi')->name('show-gramasi');
-            Route::post('/update_status', 'update_status')->name('update_status');
-            Route::put('/update_marker', 'update_marker')->name('update_marker');
+            Route::post('/update-status-cancel', 'updateStatusCancel')->name('update-status-cancel');
+            Route::put('/update-marker-detail', 'updateMarkerDetail')->name('update-marker-detail');
             Route::post('/print-marker/{kodeMarker?}', 'printMarker')->name('print-marker');
         });
 
@@ -204,10 +205,10 @@ Route::middleware('auth')->group(function () {
             Route::post('/store-time-record-extension', 'storeTimeRecordExtension')->name('store-time-ext-form-cut-input');
             Route::post('/store-this-time-record', 'storeThisTimeRecord')->name('store-this-time-form-cut-input');
             Route::put('/finish-process/{id?}', 'finishProcess')->name('finish-process-form-cut-input');
-            Route::get('/check-spreading-form/{noForm?}/{noMeja?}', 'checkSpreadingForm')->name('check-spreading-form-cut-input');
+            Route::get('/check-spreading-form/{noForm?}/{mejaId?}', 'checkSpreadingForm')->name('check-spreading-form-cut-input');
             Route::get('/check-time-record/{detailId?}', 'checkTimeRecordLap')->name('check-time-record-form-cut-input');
-            Route::post('/store-lost-time/{id?}', 'storeLostTime')->name('store-lost-form-cut-input');
-            Route::get('/check-lost-time/{id?}', 'checkLostTime')->name('check-lost-form-cut-input');
+            Route::post('/store-lost-time/{noForm?}', 'storeLostTime')->name('store-lost-form-cut-input');
+            Route::get('/check-lost-time/{noForm?}', 'checkLostTime')->name('check-lost-form-cut-input');
             Route::get('/get-form-cut-ratio', 'getRatio')->name('get-form-cut-ratio');
 
             // get order
@@ -225,6 +226,17 @@ Route::middleware('auth')->group(function () {
 
             // no cut update
             Route::put('/update-no-cut', 'updateNoCut')->name('form-cut-update-no-cut');
+        });
+
+        // Cutting Plan
+        Route::controller(CutPlanController::class)->prefix("cut-plan")->middleware('admin')->group(function () {
+            Route::get('/', 'index')->name('cut-plan');
+            Route::get('/create', 'create')->name('create-cut-plan');
+            Route::post('/store', 'store')->name('store-cut-plan');
+            Route::put('/update/{id?}', 'update')->name('update-cut-plan');
+            Route::delete('/destroy', 'destroy')->name('destroy-cut-plan');
+            Route::get('/get-selected-form/{noCutPlan?}', 'getSelectedForm')->name('get-selected-form');
+            Route::get('/get-cut-plan-form', 'getCutPlanForm')->name('get-cut-plan-form');
         });
 
         // Manual Form Cut Input
@@ -304,28 +316,6 @@ Route::middleware('auth')->group(function () {
             // get number
             Route::get('/get-number', 'getNumber')->name('pilot-form-cut-get-number');
         });
-
-        // Cutting Plan
-        Route::controller(CutPlanController::class)->prefix("cut-plan")->middleware('admin')->group(function () {
-            Route::get('/', 'index')->name('cut-plan');
-            Route::get('/create', 'create')->name('create-cut-plan');
-            Route::post('/store', 'store')->name('store-cut-plan');
-            Route::put('/update/{id?}', 'update')->name('update-cut-plan');
-            Route::delete('/destroy', 'destroy')->name('destroy-cut-plan');
-            Route::get('/get-selected-form/{noCutPlan?}', 'getSelectedForm')->name('get-selected-form');
-            Route::get('/get-cut-plan-form', 'getCutPlanForm')->name('get-cut-plan-form');
-        });
-
-        // Cutting Plan New
-        // Route::controller(CutPlanNewController::class)->prefix("cut-plan-new")->middleware('admin')->group(function () {
-        //     Route::get('/', 'index')->name('cut-plan-new');
-        //     Route::post('/show_detail', 'show_detail')->name('show_detail');
-        //     Route::get('/create', 'create')->name('create-cut-plan');
-        //     Route::post('/store', 'store')->name('store-cut-plan');
-        //     Route::put('/update', 'update')->name('update-cut-plan');
-        //     Route::delete('/destroy', 'destroy')->name('destroy-cut-plan');
-        //     Route::get('/get-selected-form/{noCutPlan?}', 'getSelectedForm')->name('get-selected-form');
-        // });
 
         // Summary Cutting
         Route::controller(SummaryController::class)->prefix("summary")->middleware('admin')->group(function () {

@@ -92,7 +92,7 @@ class GeneralController extends Controller
                 master_sb_ws.size,
                 master_sb_ws.qty order_qty,
                 COALESCE(marker_input_detail.ratio, 0) ratio,
-                COALESCE(marker_input_detail.cut_qty, 0) cut_qty
+                COALESCE(marker_input_detail.qty_cutting, 0) qty_cutting
             ")->
             where("master_sb_ws.id_act_cost", $request->act_costing_id)->
             where("master_sb_ws.color", $request->color);

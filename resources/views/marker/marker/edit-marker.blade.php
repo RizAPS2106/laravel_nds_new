@@ -203,7 +203,7 @@
                             <th></th>
                             <th></th>
                             <th id="total_ratio"></th>
-                            <th id="total_cut_qty"></th>
+                            <th id="total_qty_cutting"></th>
                         </tr>
                     </tfoot>
                 </table>
@@ -243,12 +243,12 @@
         }
 
         // Calculate Remaining Cut Qty
-        function remainingCutQty(orderQty, soDetId) {
+        function remainingQtyCutting(orderQty, soDetId) {
             // Get Total Cut Qty Based on Order WS, Order Color and Order Panel ( to know remaining cut qty )
             let sumCutQtyData = sumCutQty ? sumCutQty.find(o => o.so_det_id == soDetId && o.panel == $("#panel").val()) : 0;
 
             // Calculate Remaining Cut Qty
-            let remain = orderQty - (sumCutQtyData ? sumCutQtyData.total_cut_qty : 0);
+            let remain = orderQty - (sumCutQtyData ? sumCutQtyData.total_qty_cutting : 0);
 
             return remain;
         }
@@ -286,7 +286,7 @@
                     data: 'ratio' // remaining cut qty
                 },
                 {
-                    data: 'cut_qty' // percentage
+                    data: 'qty_cutting' // percentage
                 },
                 {
                     data: 'so_det_id' // detail so input
@@ -309,11 +309,11 @@
                     }
                 },
                 {
-                    // Remaining Cut Qty
+                    // Remaining Qty Cutting
                     targets: [5],
                     render: (data, type, row, meta) => {
-                        // Calculate Remaining Cut Qty
-                        let remain = remainingCutQty(row.order_qty, row.so_det_id);
+                        // Calculate Remaining Qty Cutting
+                        let remain = remainingQtyCutting(row.order_qty, row.so_det_id);
 
                         return remain;
                     }
@@ -322,8 +322,8 @@
                     // Percentage
                     targets: [6],
                     render: (data, type, row, meta) => {
-                        // Calculate Remaining Cut Qty
-                        let remain = remainingCutQty(row.order_qty, row.so_det_id);
+                        // Calculate Remaining Qty Cutting
+                        let remain = remainingQtyCutting(row.order_qty, row.so_det_id);
 
                         // Calculate Percentage
                         let percentage = Number(row.order_qty) > 0 ? ((Number(row.order_qty)-Number(remain))/Number(row.order_qty)*100) : 0;
@@ -351,10 +351,10 @@
                     // Ratio Input
                     targets: [8],
                     render: (data, type, row, meta) => {
-                        // Calculate Remaining Cut Qty
-                        let remain = remainingCutQty(row.order_qty, row.so_det_id);
+                        // Calculate Remaining Qty Cutting
+                        let remain = remainingQtyCutting(row.order_qty, row.so_det_id);
 
-                        // Conditional Based on Remaining Cut Qty
+                        // Conditional Based on Remaining Qty Cutting
                         // let readonly = remain < 1 ? "readonly" : "";
                         let readonly = remain < 1 ? "" : "";
 
@@ -363,11 +363,11 @@
                     }
                 },
                 {
-                    // Cut Qty Input
+                    // Qty Cutting Input
                     targets: [9],
                     render: (data, type, row, meta) => {
-                        // Hidden Cut Qty Input
-                        return '<input type="number" id="cut-qty-' + meta.row + '" name="cut_qty['+meta.row+']" value="' + row.cut_qty + '" readonly />'
+                        // Hidden Qty Cutting Input
+                        return '<input type="number" id="qty-cutting-' + meta.row + '" name="qty_cutting['+meta.row+']" value="' + row.qty_cutting + '" readonly />'
                     }
                 }
             ],
@@ -463,7 +463,7 @@
             let gelarQty = document.getElementById('gelar_qty_marker').value;
 
             // Cut Qty Formula
-            document.getElementById('cut-qty-'+id).value = ratio * gelarQty;
+            document.getElementById('qty-cutting-'+id).value = ratio * gelarQty;
 
             // Call Calculate Total Ratio Function ( for order qty datatable summary )
             calculateTotalRatio();
@@ -481,7 +481,7 @@
             for (let i = 0; i < totalSize; i++) {
                 // Sum Ratio and Cut Qty
                 totalRatio += Number(document.getElementById('ratio-'+i).value);
-                totalCutQty += Number(document.getElementById('cut-qty-'+i).value);
+                totalCutQty += Number(document.getElementById('qty-cutting-'+i).value);
             }
 
             // Set Ratio and Cut Qty ( order qty datatable summary )
@@ -502,7 +502,7 @@
                 let ratio = document.getElementById('ratio-'+i).value;
 
                 // Cut Qty Formula
-                document.getElementById('cut-qty-'+i).value = ratio * gelarQty;
+                document.getElementById('qty-cutting-'+i).value = ratio * gelarQty;
             }
 
             // Call Calculate Total Ratio Function ( for order qty datatable summary )

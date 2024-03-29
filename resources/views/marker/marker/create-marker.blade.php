@@ -191,7 +191,7 @@
                             <th>Persentase</th>
                             <th>So Det Id</th>
                             <th>Ratio</th>
-                            <th>Cut Qty</th>
+                            <th>Qty Cutting</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -224,7 +224,7 @@
         // Initial Window On Load Event
         $(document).ready(async function () {
             // Call Get Total Cut Qty ( set sum cut qty variable )
-            gettotalQtyCutting($("#act_costing_id").val(), $("#color").val(), $("#panel").val());
+            getTotalQtyCutting($("#act_costing_id").val(), $("#color").val(), $("#panel").val());
 
             // Marker Type Default Value
             $("#tipe_marker").val("regular").trigger("change");
@@ -247,7 +247,7 @@
         });
 
         // Get & Set Total Cut Qty Based on Order WS and Order Color ( to know remaining cut qty )
-        async function gettotalQtyCutting(actCostingId, color, panel) {
+        async function getTotalQtyCutting(actCostingId, color, panel) {
             sumCutQty = await $.ajax({
                 url: '{{ route("create-marker") }}',
                 type: 'get',
@@ -367,7 +367,7 @@
         }
 
         // Calculate Remaining Cut Qty
-        function remainingCutQty(orderQty, soDetId) {
+        function remainingQtyCutting(orderQty, soDetId) {
             // Get Total Cut Qty Based on Order WS, Order Color and Order Panel ( to know remaining cut qty )
             let sumCutQtyData = sumCutQty.find(o => o.so_det_id == soDetId && o.panel == $("#panel").val());
 
@@ -418,7 +418,7 @@
                     data: 'so_det_id' // ratio input
                 },
                 {
-                    data: 'so_det_id' // cut qty input
+                    data: 'so_det_id' // qty cutting input
                 }
             ],
             columnDefs: [
@@ -432,11 +432,11 @@
                     }
                 },
                 {
-                    // Remaining Cut Qty
+                    // Remaining Qty Cutting
                     targets: [5],
                     render: (data, type, row, meta) => {
-                        // Calculate Remaining Cut Qty
-                        let remain = remainingCutQty(row.order_qty, row.so_det_id);
+                        // Calculate Remaining Qty Cutting
+                        let remain = remainingQtyCutting(row.order_qty, row.so_det_id);
 
                         return remain;
                     }
@@ -445,8 +445,8 @@
                     // Percentage
                     targets: [6],
                     render: (data, type, row, meta) => {
-                        // Calculate Remaining Cut Qty
-                        let remain = remainingCutQty(row.order_qty, row.so_det_id);
+                        // Calculate Remaining Qty Cutting
+                        let remain = remainingQtyCutting(row.order_qty, row.so_det_id);
 
                         // Calculate Percentage
                         let percentage = Number(row.order_qty) > 0 ? ((Number(row.order_qty)-Number(remain))/Number(row.order_qty)*100) : 0;
@@ -474,10 +474,10 @@
                     // Ratio Input
                     targets: [8],
                     render: (data, type, row, meta) => {
-                        // Calculate Remaining Cut Qty
-                        let remain = remainingCutQty(row.order_qty, row.so_det_id);
+                        // Calculate Remaining Qty Cutting
+                        let remain = remainingQtyCutting(row.order_qty, row.so_det_id);
 
-                        // Conditional Based on Remaining Cut Qty
+                        // Conditional Based on Remaining Qty Cutting
                         // let readonly = remain < 1 ? "readonly" : "";
                         let readonly = remain < 1 ? "" : "";
 
@@ -486,10 +486,10 @@
                     }
                 },
                 {
-                    // Cut Qty Input
+                    // Qty Cutting Input
                     targets: [9],
                     render: (data, type, row, meta) => {
-                        // Hidden Cut Qty Input
+                        // Hidden Qty Cutting Input
                         return '<input type="number" id="qty-cutting-' + meta.row + '" name="qty_cutting['+meta.row+']" readonly />'
                     }
                 }
@@ -689,7 +689,7 @@
                         })
 
                         // Call Get Total Cut Qty ( update sum cut qty variable )
-                        gettotalQtyCutting($("#act_costing_id").val(), $("#color").val(), $("#panel").val());
+                        getTotalQtyCutting($("#act_costing_id").val(), $("#color").val(), $("#panel").val());
 
                         // Reset Step ( back to step one )
                         resetStep();
@@ -762,6 +762,7 @@
             await $("#panel").val(null).trigger("change");
             await $("#color").prop("disabled", true);
             await $("#panel").prop("disabled", true);
+            await $("#tipe_marker").val("regular").trigger("change");
         }
     </script>
 @endsection

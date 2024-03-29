@@ -22,7 +22,7 @@
     {{-- Edit Marker Modal --}}
     <div class="modal fade" id="editMarkerModal" tabindex="-1" role="dialog" aria-labelledby="editMarkerModalLabel"
         aria-hidden="true">
-        <form action="{{ route('update_marker') }}" method="post" onsubmit="submitForm(this, event)">
+        <form action="{{ route('update-marker-detail') }}" method="post" onsubmit="submitForm(this, event)">
             @method('PUT')
             <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width: 35%;">
                 <div class="modal-content">
@@ -36,27 +36,27 @@
                             <div class='col-sm-12'>
                                 <div class='form-group'>
                                     <label class='form-label'><small class="fw-bold">Gramasi</small></label>
-                                    <input type='number' class='form-control' id='edit_gramasi' name='edit_gramasi' value = ''>
+                                    <input type='number' class='form-control' id='edit_gramasi_marker' name='edit_gramasi_marker' value = ''>
                                 </div>
                             </div>
                             <div class='col-sm-12' id="marker_pilot">
                                 <div class='form-group'>
                                     <label class='form-label'><small class="fw-bold">Status Pilot</small></label>
-                                    <div class="d-flex gap-3 ms-1">
+                                    <div class="d-flex flex-column gap-3 ms-1">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="pilot_status" id="idle" value="idle">
+                                            <input class="form-check-input" type="radio" name="edit_pilot_status" id="idle" value="idle">
                                             <label class="form-check-label" for="idle">
                                                 <small class="fw-bold"><i class="fa fa-minus fa-sm"></i> Pilot Idle</small>
                                             </label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="pilot_status" id="active" value="active">
+                                            <input class="form-check-input" type="radio" name="edit_pilot_status" id="active" value="active">
                                             <label class="form-check-label text-success" for="active">
                                                 <small class="fw-bold"><i class="fa fa-check fa-sm"></i> Pilot Approve</small>
                                             </label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="pilot_status" id="not_active" value="not active">
+                                            <input class="form-check-input" type="radio" name="edit_pilot_status" id="not_active" value="not active">
                                             <label class="form-check-label text-danger" for="not_active">
                                                 <small class="fw-bold"><i class="fa fa-times fa-sm"></i> Pilot Disapprove</small>
                                             </label>
@@ -64,16 +64,18 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-sm-12 d-none" id="advanced-edit-section">
-                                <a href="" class="btn btn-primary btn-sm btn-block" id="advanced-edit-link">
-                                    <i class="fas fa-pen"></i> Advanced Edit
-                                </a>
-                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal"><i class="fa fa-times"></i> Tutup</button>
-                        <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Simpan</button>
+                    <div class="modal-footer justify-content-between">
+                        <div id="advanced-edit-section">
+                            <a href="" class="btn btn-primary" id="advanced-edit-link">
+                                <i class="fas fa-pen"></i> Advanced Edit
+                            </a>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal"><i class="fa fa-times"></i> Tutup</button>
+                            <button type="submit" class="btn btn-success"><i class="fa fa-save"></i> Simpan</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -348,7 +350,7 @@
                 dataType: 'json',
                 success: function(response) {
                     document.getElementById('edit_id').value = response.id;
-                    document.getElementById('edit_gramasi').value = response.gramasi;
+                    document.getElementById('edit_gramasi_marker').value = response.gramasi_marker;
 
                     if (response.tipe_marker == "pilot") {
                         document.getElementById('marker_pilot').classList.remove('d-none');
@@ -363,9 +365,9 @@
                     }
 
                     if (response.jumlah_form > 0) {
-                        document.getElementById('edit_gramasi').setAttribute('readonly', true);
+                        document.getElementById('edit_gramasi_marker').setAttribute('readonly', true);
                     } else {
-                        document.getElementById('edit_gramasi').removeAttribute('readonly');
+                        document.getElementById('edit_gramasi_marker').removeAttribute('readonly');
                     }
 
                     document.getElementById('advanced-edit-link').setAttribute('href', '{{ route('edit-marker') }}/' + response.id);
@@ -381,7 +383,7 @@
         function cancel(id) {
             let html = $.ajax({
                 type: "POST",
-                url: '{{ route('update_status') }}',
+                url: '{{ route('update-status-cancel') }}',
                 data: {
                     id: id
                 },
