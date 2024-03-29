@@ -44,12 +44,12 @@
                             <th>No. Form</th>
                             <th>No. Meja</th>
                             <th>No. Marker</th>
-                            <th>No. WS</th>
-                            <th>Style</th>
-                            <th>Color</th>
-                            <th>Panel</th>
-                            <th class="text-start align-bottom">Status</th>
                             <th>Size Ratio</th>
+                            <th>Panel</th>
+                            <th>Color</th>
+                            <th>Style</th>
+                            <th>No. WS</th>
+                            <th>Status</th>
                             <th>Qty Ply</th>
                             <th>Ket.</th>
                             <th>Plan</th>
@@ -68,12 +68,23 @@
                 <div class="modal-dialog modal-lg modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header bg-sb text-light">
-                            <h1 class="modal-title fs-5" id="editMejaModalLabel">Edit Meja</h1>
+                            <h1 class="modal-title fs-5" id="editMejaModalLabel"><i class="fa fa-edit"></i> Edit Meja</h1>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body" style="max-height: 65vh !important;">
                             <div class="row">
                                 <input type="hidden" id="edit_id" name="edit_id">
+                                <div class="col-12 col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label"><small>No. Meja</small></label>
+                                        <select class="form-select form-select-sm select2manual" id="edit_meja_id" name="edit_meja_id">
+                                            <option value="">-</option>
+                                            @foreach ($users as $user)
+                                                <option value="{{ $user->id }}">{{ strtoupper($user->name) }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
                                 <div class="col-6 col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label"><small>Tanggal Form</small></label>
@@ -176,24 +187,13 @@
                                         <input type="text" class="form-control" id="edit_cons_marker" name="edit_cons_marker" value="" readonly />
                                     </div>
                                 </div>
-                                <div class="col-4 col-md-4">
+                                <div class="col-6 col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label"><small>Tipe Marker</small></label>
                                         <input type="text" class="form-control" id="edit_tipe_marker" name="edit_tipe_marker" value="" readonly />
                                     </div>
                                 </div>
-                                <div class="col-4 col-md-4">
-                                    <div class="mb-3">
-                                        <label class="form-label"><small>No. Meja</small></label>
-                                        <select class="form-select form-select-sm select2manual" id="edit_meja_id" name="edit_meja_id">
-                                            <option value="">-</option>
-                                            @foreach ($users as $user)
-                                                <option value="{{ $user->id }}">{{ strtoupper($user->name) }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-4 col-md-4">
+                                <div class="col-6 col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label"><small>Keterangan</small></label>
                                         <textarea class="form-control" id="edit_notes" name="edit_notes" rows="1" readonly></textarea>
@@ -205,7 +205,7 @@
                                             <tr>
                                                 <th>Size</th>
                                                 <th>Ratio</th>
-                                                <th>Cut Qty</th>
+                                                <th>Qty Cutting</th>
                                             </tr>
                                         </thead>
                                     </table>
@@ -213,8 +213,8 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Tutup</button>
-                            <button type="submit" class="btn btn-success">Simpan</button>
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal"><i class="fa fa-times fa-sm"></i> Tutup</button>
+                            <button type="submit" class="btn btn-success"><i class="fa fa-save fa-sm"></i> Simpan</button>
                         </div>
                     </div>
                 </div>
@@ -249,8 +249,8 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Tutup</button>
-                            <button type="submit" class="btn btn-success">Simpan</button>
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal"><i class="fa fa-times fa-sm"></i> Tutup</button>
+                            <button type="submit" class="btn btn-success"><i class="fa fa-save fa-sm"></i> Simpan</button>
                         </div>
                     </div>
                 </div>
@@ -313,22 +313,22 @@
                     data: 'marker_input_kode'
                 },
                 {
-                    data: 'act_costing_ws'
-                },
-                {
-                    data: 'style'
-                },
-                {
-                    data: 'color'
+                    data: 'marker_details'
                 },
                 {
                     data: 'panel'
                 },
                 {
-                    data: 'status_form'
+                    data: 'color'
                 },
                 {
-                    data: 'marker_details'
+                    data: 'style'
+                },
+                {
+                    data: 'act_costing_ws'
+                },
+                {
+                    data: 'status_form'
                 },
                 {
                     data: 'ply_progress'
@@ -342,28 +342,28 @@
             ],
             columnDefs: [
                 {
-                    targets: [3],
+                    targets: [5],
                     render: (data, type, row, meta) => {
                         let color = "";
 
-                        if (row.status == 'finish') {
+                        if (row.status_form == 'finish') {
                             color = '#087521';
-                        } else if (row.status == 'marker') {
+                        } else if (row.status_form == 'marker') {
                             color = '#2243d6';
-                        } else if (row.status == 'form') {
+                        } else if (row.status_form == 'form') {
                             color = '#2243d6';
-                        } else if (row.status == 'form detail') {
+                        } else if (row.status_form == 'form detail') {
                             color = '#2243d6';
-                        } else if (row.status == 'form spreading') {
+                        } else if (row.status_form == 'form spreading') {
                             color = '#2243d6';
                         }
 
-                        return data ? "<span style='font-weight: 600; color: "+ color + "' >" + data.toUpperCase() + "</span>" : "<span style=' color: " + color + "'>-</span>"
+                        return  "<span style='font-weight: 600; color: "+ color + "' >" + (data ? data.replace(/,/g, '<br>') : '-') + "</span>"
                     }
                 },
                 {
-                    targets: [9],
-                    className: "text-center align-middle",
+                    targets: [10],
+                    className: "text-center",
                     render: (data, type, row, meta) => {
                         icon = "";
 
@@ -388,26 +388,6 @@
                     }
                 },
                 {
-                    targets: [10],
-                    render: (data, type, row, meta) => {
-                        let color = "";
-
-                        if (row.status == 'finish') {
-                            color = '#087521';
-                        } else if (row.status == 'marker') {
-                            color = '#2243d6';
-                        } else if (row.status == 'form') {
-                            color = '#2243d6';
-                        } else if (row.status == 'form detail') {
-                            color = '#2243d6';
-                        } else if (row.status == 'form spreading') {
-                            color = '#2243d6';
-                        }
-
-                        return  "<span style='font-weight: 600; color: "+ color + "' >" + (data ? data.replace(/,/g, '<br>') : '-') + "</span>"
-                    }
-                },
-                {
                     targets: [11],
                     render: (data, type, row, meta) => {
                         return `
@@ -421,22 +401,22 @@
                 {
                     targets: [0],
                     render: (data, type, row, meta) => {
-                        let btnEditMeja = row.status == 'idle' ? "<a href='javascript:void(0);' class='btn btn-primary btn-sm' onclick='editData(" + JSON.stringify(row) + ", \"editMejaModal\", [{\"function\" : \"dataTableRatioReload()\"}]);'><i class='fa fa-edit'></i></a>" : "";
-                        let btnEditStatus = row.status != 'idle' ? "<a href='javascript:void(0);' class='btn btn-primary btn-sm' onclick='editData(" + JSON.stringify({'status_id' : row.id, 'status' : row.status}) + ", \"editStatusModal\", [{\"function\" : \"dataTableRatio1Reload()\"}]);'><i class='fa fa-cog'></i></a>" : "";
-                        let btnDelete = row.status == 'idle' ? "<a href='javascript:void(0);' class='btn btn-danger btn-sm' data='"+JSON.stringify(row)+"' data-url='"+'{{ route('destroy-spreading') }}'+"/"+row.id+"' onclick='deleteData(this);'><i class='fa fa-trash'></i></a>" : "";
+                        let btnEditMeja = row.status_form == 'idle' ? "<a href='javascript:void(0);' class='btn btn-primary btn-sm' onclick='editData(" + JSON.stringify(row) + ", \"editMejaModal\", [{\"function\" : \"dataTableRatioReload()\"}]);'><i class='fa fa-edit'></i></a>" : "";
+                        let btnEditStatus = row.status_form != 'idle' ? "<a href='javascript:void(0);' class='btn btn-primary btn-sm' onclick='editData(" + JSON.stringify({'status_id' : row.id, 'status' : row.status_form}) + ", \"editStatusModal\", [{\"function\" : \"dataTableRatio1Reload()\"}]);'><i class='fa fa-cog'></i></a>" : "";
+                        let btnDelete = row.status_form == 'idle' ? "<a href='javascript:void(0);' class='btn btn-danger btn-sm' data='" + JSON.stringify(row) + "' data-url='"+'{{ route('destroy-spreading') }}'+"/"+row.id+"' onclick='deleteData(this);'><i class='fa fa-trash'></i></a>" : "";
                         let btnProcess = "";
 
                         if (row.tipe_form == 'manual') {
-                            btnProcess = (row.qty_ply > 0 && row.meja_id != '' && row.meja_id != null && row.app == 'y') || row.status != 'idle' ?
-                                `<a class='btn btn-success btn-sm' href='{{ route('process-manual-form-cut') }}/` + row.id + `' data-bs-toggle='tooltip' target='_blank'><i class='fa `+ (row.status == "finish" ? `fa-search-plus` : `fa-plus`) +`'></i></a>` :
+                            btnProcess = (row.qty_ply > 0 && row.meja_id != '' && row.meja_id != null && row.app == 'y') || row.status_form != 'idle' ?
+                                `<a class='btn btn-success btn-sm' href='{{ route('process-manual-form-cut') }}/` + row.id + `' data-bs-toggle='tooltip' target='_blank'><i class='fa `+ (row.status_form == "finish" ? `fa-search-plus` : `fa-plus`) +`'></i></a>` :
                                 "";
                         } else if (row.tipe_form == 'pilot') {
-                            btnProcess = (row.qty_ply > 0 && row.meja_id != '' && row.meja_id != null && row.app == 'y') || row.status != 'idle' ?
-                                `<a class='btn btn-success btn-sm' href='{{ route('process-pilot-form-cut') }}/` + row.id + `' data-bs-toggle='tooltip' target='_blank'><i class='fa `+(row.status == "finish" ? `fa-search-plus` : `fa-plus`)+`'></i></a>` :
+                            btnProcess = (row.qty_ply > 0 && row.meja_id != '' && row.meja_id != null && row.app == 'y') || row.status_form != 'idle' ?
+                                `<a class='btn btn-success btn-sm' href='{{ route('process-pilot-form-cut') }}/` + row.id + `' data-bs-toggle='tooltip' target='_blank'><i class='fa `+(row.status_form == "finish" ? `fa-search-plus` : `fa-plus`)+`'></i></a>` :
                                 "";
                         } else {
-                            btnProcess = (row.qty_ply > 0 && row.meja_id != '' && row.meja_id != null && row.app == 'y') || row.status != 'idle' ?
-                                `<a class='btn btn-success btn-sm' href='{{ route('process-form-cut-input') }}/` + row.id + `' data-bs-toggle='tooltip' target='_blank'><i class='fa `+(row.status == "finish" ? `fa-search-plus` : `fa-plus`)+`'></i></a>` :
+                            btnProcess = (row.qty_ply > 0 && row.meja_id != '' && row.meja_id != null && row.app == 'y') || row.status_form != 'idle' ?
+                                `<a class='btn btn-success btn-sm' href='{{ route('process-form-cut-input') }}/` + row.id + `' data-bs-toggle='tooltip' target='_blank'><i class='fa `+(row.status_form == "finish" ? `fa-search-plus` : `fa-plus`)+`'></i></a>` :
                                 "";
                         }
 
@@ -448,15 +428,15 @@
                     render: (data, type, row, meta) => {
                         let color = "";
 
-                        if (row.status == 'finish') {
+                        if (row.status_form == 'finish') {
                             color = '#087521';
-                        } else if (row.status == 'marker') {
+                        } else if (row.status_form == 'marker') {
                             color = '#2243d6';
-                        } else if (row.status == 'form') {
+                        } else if (row.status_form == 'form') {
                             color = '#2243d6';
-                        } else if (row.status == 'form detail') {
+                        } else if (row.status_form == 'form detail') {
                             color = '#2243d6';
-                        } else if (row.status == 'form spreading') {
+                        } else if (row.status_form == 'form spreading') {
                             color = '#2243d6';
                         }
 
@@ -464,7 +444,7 @@
                     }
                 },
                 {
-                    targets: [1, 2, 3, 4, 5],
+                    targets: [1, 2, 3, 4, 5, 6, 7, 8, 9, 13],
                     className: "text-nowrap"
                 }
             ],
@@ -497,7 +477,7 @@
                     data: 'ratio'
                 },
                 {
-                    data: 'cut_qty'
+                    data: 'qty_cutting'
                 },
             ]
         });
@@ -520,7 +500,7 @@
                     data: 'ratio'
                 },
                 {
-                    data: 'cut_qty'
+                    data: 'qty_cutting'
                 },
             ]
         });

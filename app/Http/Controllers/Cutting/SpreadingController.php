@@ -33,11 +33,11 @@ class SpreadingController extends Controller
         if ($request->ajax()) {
             $additionalQuery = "";
 
-            if ($request->dateFrom) {
+            if ($request->tanggal_awal) {
                 $additionalQuery .= " and form_cut_input.tanggal >= '" . $request->tanggal_awal . "' ";
             }
 
-            if ($request->dateTo) {
+            if ($request->tanggal_akhir) {
                 $additionalQuery .= " and form_cut_input.tanggal <= '" . $request->tanggal_akhir . "' ";
             }
 
@@ -77,7 +77,7 @@ class SpreadingController extends Controller
                     form_cut_input.tipe_form,
                     form_cut_input.status_form,
                     form_cut_input.meja_id,
-                    users.name,
+                    UPPER(users.name) name,
                     CONCAT(COALESCE(form_cut_input.total_ply, '0'), '/', COALESCE(form_cut_input.qty_ply, 0)) ply_progress,
                     COALESCE(form_cut_input.qty_ply, 0) qty_ply,
                     COALESCE(form_cut_input.total_ply, '0') total_ply,
@@ -90,12 +90,13 @@ class SpreadingController extends Controller
                     GROUP_CONCAT(DISTINCT CONCAT(marker_input_detail.size, '(', marker_input_detail.ratio, ')') ORDER BY master_size_new.urutan ASC SEPARATOR ', ') marker_details,
                     cutting_plan.tanggal tanggal_plan,
                     cutting_plan.app
-                FROM form_cut_input
-                LEFT JOIN cutting_plan ON cutting_plan.no_form = form_cut_input.no_form
-                LEFT JOIN users ON users.id = form_cut_input.meja_id
-                LEFT JOIN marker_input ON form_cut_input.marker_input_kode = marker_input.kode and marker_input.cancel = 'N'
-                LEFT JOIN marker_input_detail ON marker_input.kode = marker_input_detail.marker_input_kode
-                LEFT JOIN master_size_new ON marker_input_detail.size = master_size_new.size
+                FROM
+                    form_cut_input
+                    LEFT JOIN cutting_plan ON cutting_plan.no_form = form_cut_input.no_form
+                    LEFT JOIN users ON users.id = form_cut_input.meja_id
+                    LEFT JOIN marker_input ON form_cut_input.marker_input_kode = marker_input.kode and marker_input.cancel = 'N'
+                    LEFT JOIN marker_input_detail ON marker_input.kode = marker_input_detail.marker_input_kode
+                    LEFT JOIN master_size_new ON marker_input_detail.size = master_size_new.size
                 WHERE
                     form_cut_input.id is not null
                     " . $additionalQuery . "
@@ -115,7 +116,7 @@ class SpreadingController extends Controller
 
         $users = User::select("id", "name", "username")->where('type', 'meja')->get();
 
-        return view('spreading.spreading', ['users' => $users, 'page' => 'dashboard-cutting', "subPageGroup" => "proses-cutting", "subPage" => "spreading"]);
+        return view('cutting.spreading.spreading', ['users' => $users, 'page' => 'dashboard-cutting', "subPageGroup" => "proses-cutting", "subPage" => "spreading"]);
     }
 
     /**
@@ -141,7 +142,7 @@ class SpreadingController extends Controller
         ");
 
 
-        return view('spreading.create-spreading', ['orders' => $availableOrders, 'page' => 'dashboard-cutting', "subPageGroup" => "proses-cutting", "subPage" => "spreading"]);
+        return view('cutting.spreading.create-spreading', ['orders' => $availableOrders, 'page' => 'dashboard-cutting', "subPageGroup" => "proses-cutting", "subPage" => "spreading"]);
     }
 
     public function getMarkerOptions(Request $request)
@@ -149,7 +150,7 @@ class SpreadingController extends Controller
         $markers = DB::select("
             select
                 *,
-                concat(kode,' - ',color, ' - (',panel, ' - ',urutan_marker, ' )') tampil
+                concat(kode, ' - ', color, ' - (', panel, ' - ', urutan_marker, ' )') tampil
             from
                 marker_input
                 left join (select marker_input_kode from form_cut_input group by marker_input_kode ) form_marker on marker_input.kode = form_marker.marker_input_kode
@@ -158,13 +159,14 @@ class SpreadingController extends Controller
                 (((marker_input.gelar_qty_balance_marker is null or marker_input.gelar_qty_balance_marker = 0) and form_marker.marker_input_kode is null) or marker_input.gelar_qty_balance_marker > 0) and
                 marker_input.cancel = 'N'
             order by
+                color asc,
                 urutan_marker asc
         ");
 
         $options = "<option value=''>Pilih No Marker</option>";
 
         foreach ($markers as $marker) {
-            $options .= " <option value='" . $marker->kode . "'>" . $marker->kode . "</option> ";
+            $options .= " <option value='" . $marker->kode . "'>" . $marker->tampil . "</option> ";
         }
 
         return $options;
@@ -325,16 +327,17 @@ class SpreadingController extends Controller
     {
         $validatedRequest = $request->validate([
             "edit_id" => "required",
-            "edit_no_meja" => "required",
+            "edit_meja_id" => "required",
         ]);
 
         $updateNoMeja = FormCutInput::where('id', $validatedRequest['edit_id'])->update([
-            'no_meja' => $validatedRequest['edit_no_meja']
+            'meja_id' => $validatedRequest['edit_meja_id']
         ]);
 
         if ($updateNoMeja) {
             $updatedData = FormCutInput::where('id', $validatedRequest['edit_id'])->first();
-            $meja = User::where('id', $validatedRequest['edit_no_meja'])->first();
+            $meja = User::where('id', $validatedRequest['edit_meja_id'])->first();
+
             return array(
                 'status' => 200,
                 'message' => 'Alokasi Meja "' . ucfirst($meja->name) . '" ke form "' . $updatedData->no_form . '" berhasil',

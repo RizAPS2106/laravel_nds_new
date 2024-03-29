@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="d-flex justify-content-between mb-3">
-        <h5 class="fw-bold text-sb"><i class="fa-solid fa-file-circle-plus"></i> Tambah Data Form Spreading</h5>
+        <h5 class="fw-bold text-sb"><i class="fa-solid fa-file-circle-plus fa-sm"></i> Tambah Data Form Spreading</h5>
         <a href="{{ route('spreading') }}" class="btn btn-primary btn-sm px-1 py-1"><i class="fas fa-reply"></i> Kembali ke Spreading</a>
     </div>
     <form action="{{ route('store-spreading') }}" method="post" id="store-spreading" name='form' onsubmit="submitForm(this, event)">
