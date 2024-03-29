@@ -101,7 +101,7 @@ function submitForm(e, evt) {
         contentType: false,
         success: function(res) {
             $("input[type=submit][clicked=true]").removeAttr('disabled');
-            if (res.status == 200 || res.status == 999) {
+            if (res.status == 200 || res.status == 900 || res.status == 999) {
                 $('.modal').modal('hide');
 
                 Swal.fire({
@@ -147,36 +147,7 @@ function submitForm(e, evt) {
                     $(".select2").val('').trigger('change');
                     $(".select2bs4").val('').trigger('change');
                 }
-            } else if (res.status == 900) {
-                Swal.fire({
-                    icon: 'success',
-                    title: res.message,
-                    showCancelButton: false,
-                    showConfirmButton: true,
-                    confirmButtonText: 'Oke'
-                }).then(() => {
-                    if (isNotNull(res.redirect)) {
-                        if (res.redirect != 'reload') {
-                            location.href = res.redirect;
-                        } else {
-                            location.reload();
-                        }
-                    } else {
-                        location.reload();
-                    }
-                });
-
-                e.reset();
-                if (document.getElementsByClassName('select2')) {
-                    $(".select2").val('').trigger('change');
-                    $(".select2bs4").val('').trigger('change');
-                }
-
-                if (res.callback != '') {
-                    eval(res.callback);
-                }
-            }
-            else {
+            } else {
                 for(let i = 0;i < res.errors; i++) {
                     document.getElementById(res.errors[i]).classList.add('is-invalid');
                     modified.push([res.errors[i], 'classList', 'remove(', "'is-invalid')"])
@@ -223,15 +194,18 @@ function submitForm(e, evt) {
 
             for (let key in res.errors) {
                 message = res.errors[key];
-                document.getElementById(key).classList.add('is-invalid');
-                document.getElementById(key+'_error').classList.remove('d-none');
-                document.getElementById(key+'_error').innerHTML = res.errors[key];
 
-                modified.push(
-                    [key, '.classList', '.remove(', "'is-invalid')"],
-                    [key+'_error', '.classList', '.add(', "'d-none')"],
-                    [key+'_error', '.innerHTML = ', "''"],
-                )
+                if (document.getElementById(key)) {
+                    document.getElementById(key).classList.add('is-invalid');
+                    document.getElementById(key+'_error').classList.remove('d-none');
+                    document.getElementById(key+'_error').innerHTML = res.errors[key];
+
+                    modified.push(
+                        [key, '.classList', '.remove(', "'is-invalid')"],
+                        [key+'_error', '.classList', '.add(', "'d-none')"],
+                        [key+'_error', '.innerHTML = ', "''"],
+                    )
+                }
             };
 
             iziToast.error({

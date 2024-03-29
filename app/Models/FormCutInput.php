@@ -23,24 +23,21 @@ class FormCutInput extends Model
 
     public function marker()
     {
-        return $this->belongsTo(Marker::class, 'id_marker', 'kode');
+        return $this->belongsTo(Marker::class, 'marker_input_kode', 'kode');
     }
 
     public function alokasiMeja()
     {
-        return $this->belongsTo(User::class, 'no_meja', 'id');
+        return $this->belongsTo(User::class, 'meja_id', 'id');
     }
 
-    /**
-     * Get the cutting plan for the form cut.
-     */
     public function cuttingPlan()
     {
-        return $this->hasOne(CutPlan::class, 'no_form_cut_input', 'no_form');
+        return $this->hasOne(CutPlan::class, 'no_form', 'no_form');
     }
 
     public function formCutInputDetails()
     {
-        return $this->hasMany(FormCutInputDetail::class, 'no_form_cut_input', 'no_form');
+        return $this->hasMany(FormCutInputDetail::class, 'no_form', 'no_form');
     }
 }

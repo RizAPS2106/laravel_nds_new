@@ -1,17 +1,12 @@
 @extends('layouts.index')
 
-@section('custom-link')
-    <!-- Select2 -->
-    <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
-@endsection
-
 @section('content')
     <div class="row g-3">
         <div class="d-flex gap-3 align-items-center">
             <h5 class="mb-1">Form Cut - {{ strtoupper($formCutInputData->name) }}</h5>
             <button class="btn btn-sm btn-success" id="start-process" onclick="startProcess()">Mulai Pengerjaan</button>
         </div>
+        {{-- Header Data --}}
         <div class="col-md-6">
             <div class="card card-sb" id="header-data-card">
                 <div class="card-header">
@@ -24,13 +19,13 @@
                 <div class="card-body" style="display: block;">
                     @php
                         $thisActCosting = $actCostingData->where('id', $formCutInputData->act_costing_id)->first();
-                        $thisMarkerDetails = $markerDetailData->where('kode_marker', $formCutInputData->id_marker);
+                        $thisMarkerDetails = $markerDetailData->where('kode_marker', $formCutInputData->marker_input_kode);
                     @endphp
                     <div class="row align-items-end">
                         <input type="hidden" name="id" id="id" value="{{ $id }}" readonly>
+                        <input type="hidden" name="meja_id" id="meja_id" value="{{ $formCutInputData->meja_id }}" readonly>
                         <input type="hidden" name="act_costing_id" id="act_costing_id" value="{{ $formCutInputData->act_costing_id }}" readonly>
-                        <input type="hidden" name="status" id="status" value="{{ $formCutInputData->status }}" readonly>
-                        <input type="hidden" name="no_meja" id="no_meja" value="{{ $formCutInputData->no_meja }}" readonly>
+                        <input type="hidden" name="status_form" id="status_form" value="{{ $formCutInputData->status_form }}" readonly>
                         <div class="col-6 col-md-4">
                             <div class="mb-3">
                                 <label class="form-label"><small><b>Start</b></small></label>
@@ -62,13 +57,13 @@
                         <div class="col-6 col-md-6">
                             <div class="mb-3">
                                 <label class="form-label"><small><b>Tanggal</b></small></label>
-                                <input type="date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" readonly>
+                                <input type="date" class="form-control form-control-sm" name="tanggal" id="tanggal" value="{{ date('Y-m-d') }}" readonly>
                             </div>
                         </div>
                         <div class="col-6 col-md-6">
                             <div class="mb-3">
                                 <label class="form-label label-fetch"><small><b>Kode Marker</b></small></label>
-                                <input type="text" class="form-control form-control-sm border-fetch" value="{{ $formCutInputData->id_marker }}" readonly>
+                                <input type="text" class="form-control form-control-sm border-fetch" value="{{ $formCutInputData->marker_input_kode }}" readonly>
                             </div>
                         </div>
                         <div class="col-6 col-md-6">
@@ -116,12 +111,12 @@
                         <div class="col-4 col-md-4">
                             <div class="mb-3">
                                 <label class="form-label label-fetch"><small><b>QTY Gelar Marker</b></small></label>
-                                <input type="text" class="form-control form-control-sm border-fetch" name="gelar_qty" value="{{ $formCutInputData->gelar_qty }}" readonly>
+                                <input type="text" class="form-control form-control-sm border-fetch" name="gelar_qty" value="{{ $formCutInputData->gelar_qty_marker }}" readonly>
                             </div>
                         </div>
                         <div class="col-4 col-md-4">
                             <div class="mb-3">
-                                <label class="form-label label-fetch"><small><b>QTY Cut Ply</b></small></label>
+                                <label class="form-label label-fetch"><small><b>QTY Ply</b></small></label>
                                 <input type="text" class="form-control form-control-sm border-fetch" id="qty_ply" name="qty_ply" value="{{ $formCutInputData->qty_ply }}" readonly>
                             </div>
                         </div>
@@ -139,20 +134,20 @@
                         <tbody>
                             @php
                                 $totalRatio = 0;
-                                $totalCutQty = 0;
-                                $totalCutQtyPly = 0;
+                                $totalQtyCutting = 0;
+                                $totalQtyPly = 0;
                             @endphp
                             @foreach ($thisMarkerDetails as $item)
                                 <tr>
                                     @php
                                         $totalRatio += $item->ratio;
-                                        $totalCutQty += $item->cut_qty;
+                                        $totalQtyCutting += $item->qty_cutting;
                                         $qtyPly = $item->ratio * $formCutInputData->qty_ply;
-                                        $totalCutQtyPly += $qtyPly;
+                                        $totalQtyPly += $qtyPly;
                                     @endphp
                                     <td>{{ $item->size }}</td>
                                     <td>{{ $item->ratio }}</td>
-                                    <td>{{ $item->cut_qty }}</td>
+                                    <td>{{ $item->qty_cutting }}</td>
                                     <td>{{ $qtyPly }}</td>
                                 </tr>
                             @endforeach
@@ -161,25 +156,25 @@
                             <tr>
                                 <th class="text-center">Total</th>
                                 <th id="totalRatio">{{ $totalRatio }}</th>
-                                <th id="totalQtyCutMarker">{{ $totalCutQty }}</th>
-                                <th id="totalQtyCutPly">{{ $totalCutQtyPly }}</th>
+                                <th id="totalQtyCutting">{{ $totalQtyCutting }}</th>
+                                <th id="totalQtyPly">{{ $totalQtyPly }}</th>
                             </tr>
                         </tfoot>
                     </table>
                     <input type="hidden" name="total_ratio" id="total_ratio" value="{{ $totalRatio }}">
-                    <input type="hidden" name="total_qty_cut" id="total_qty_cut" value="{{ $totalCutQty }}">
-                    <input type="hidden" name="total_qty_cut_ply" id="total_qty_cut_ply" value="{{ $totalCutQtyPly }}">
+                    <input type="hidden" name="total_qty_cutting" id="total_qty_cutting" value="{{ $totalQtyCutting }}">
+                    <input type="hidden" name="total_qty_ply" id="total_qty_ply" value="{{ $totalQtyPly }}">
                 </div>
             </div>
         </div>
+        {{-- Process One --}}
         <div class="col-md-6">
             <button class="btn btn-sb mb-3 d-none" id="next-process-1" onclick="nextProcessOne()">NEXT</button>
             <div class="card card-sb d-none" id="detail-data-card">
                 <div class="card-header">
                     <h3 class="card-title">Detail Data</h3>
                     <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
-                                class="fas fa-minus"></i></button>
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                     </div>
                 </div>
                 <div class="card-body" style="display: block;">
@@ -187,22 +182,19 @@
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-fetch"><small><b>P. Marker</b></small></label>
-                                <input type="number" class="form-control form-control-sm border-fetch"
-                                    value="{{ $formCutInputData->panjang_marker }}" readonly>
+                                <input type="number" class="form-control form-control-sm border-fetch" value="{{ $formCutInputData->panjang_marker }}" readonly>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-fetch"><small><b>Unit</b></small></label>
-                                <input type="text" class="form-control form-control-sm border-fetch"
-                                    value="{{ strtoupper($formCutInputData->unit_panjang_marker) }}" readonly>
+                                <input type="text" class="form-control form-control-sm border-fetch" value="{{ strtoupper($formCutInputData->unit_panjang_marker) }}" readonly>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-input"><small><b>P. Act</b></small></label>
-                                <input type="number" class="form-control form-control-sm border-input" name="p_act"
-                                    id="p_act" value="{{ $formCutInputData->p_act }}"
+                                <input type="number" class="form-control form-control-sm border-input" name="p_act" id="p_act" value="{{ $formCutInputData->p_act }}"
                                     onkeyup="
                                         calculateConsAct();
                                         calculateConsAmpar();
@@ -220,36 +212,32 @@
                                         calculateShortRoll();
                                         calculateRemark();
                                         // calculateSisaKain();
-                                    ">
+                                    "
+                                >
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-input"><small><b>Unit Act</b></small></label>
-                                <input type="text" class="form-control form-control-sm border-input" name="unit_p_act"
-                                    id="unit_p_act" value="{{ strtoupper($formCutInputData->unit_panjang_marker) }}"
-                                    readonly>
+                                <input type="text" class="form-control form-control-sm border-input" name="unit_p_act" id="unit_p_act" value="{{ strtoupper($formCutInputData->unit_panjang_marker) }}" readonly>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-fetch"><small><b>Comma</b></small></label>
-                                <input type="number" class="form-control form-control-sm border-fetch"
-                                    value="{{ $formCutInputData->comma_marker }}" readonly>
+                                <input type="number" class="form-control form-control-sm border-fetch" value="{{ $formCutInputData->comma_marker }}" readonly>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-fetch"><small><b>Unit</b></small></label>
-                                <input type="text" class="form-control form-control-sm border-fetch"
-                                    value="{{ strtoupper($formCutInputData->unit_comma_marker) }}" readonly>
+                                <input type="text" class="form-control form-control-sm border-fetch" value="{{ strtoupper($formCutInputData->unit_comma_marker) }}" readonly>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-input"><small><b>Comma Act</b></small></label>
-                                <input type="number" class="form-control form-control-sm border-input" name="comma_act"
-                                    id="comma_act" value="{{ $formCutInputData->comma_p_act }}"
+                                <input type="number" class="form-control form-control-sm border-input" name="comma_act" id="comma_act" value="{{ $formCutInputData->comma_p_act }}"
                                     onkeyup="
                                         calculateConsAct();
                                         calculateConsAmpar();
@@ -267,29 +255,26 @@
                                         calculateShortRoll();
                                         calculateRemark();
                                         // calculateSisaKain();
-                                    ">
+                                    "
+                                >
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-input"><small><b>Unit Act</b></small></label>
-                                <input type="text" class="form-control form-control-sm border-input"
-                                    name="unit_comma_act" id="unit_comma_act"
-                                    value="{{ strtoupper($formCutInputData->unit_comma_marker) }}" readonly>
+                                <input type="text" class="form-control form-control-sm border-input" name="unit_comma_act" id="unit_comma_act" value="{{ strtoupper($formCutInputData->unit_comma_marker) }}" readonly>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-fetch"><small><b>L. Marker</b></small></label>
-                                <input type="number" class="form-control form-control-sm border-fetch"
-                                    value="{{ strtoupper($formCutInputData->lebar_marker) }}" readonly>
+                                <input type="number" class="form-control form-control-sm border-fetch" value="{{ strtoupper($formCutInputData->lebar_marker) }}" readonly>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-fetch"><small><b>Unit</b></small></label>
-                                <input type="text" class="form-control form-control-sm border-fetch"
-                                    value="{{ strtoupper($formCutInputData->unit_lebar_marker) }}" readonly>
+                                <input type="text" class="form-control form-control-sm border-fetch" value="{{ strtoupper($formCutInputData->unit_lebar_marker) }}" readonly>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
@@ -312,57 +297,60 @@
                                         calculateShortRoll();
                                         calculateRemark();
                                         // calculateSisaKain();
-                                    ">
+                                    "
+                                >
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-input"><small><b>Unit Act</b></small></label>
-                                <input type="text" class="form-control form-control-sm border-input" name="unit_l_act"
-                                    id="unit_l_act" value="{{ strtoupper($formCutInputData->unit_lebar_marker) }}"
-                                    readonly>
+                                <input type="text" class="form-control form-control-sm border-input" name="unit_l_act" id="unit_l_act" value="{{ strtoupper($formCutInputData->unit_lebar_marker) }}" readonly>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-fetch"><small><b>Gramasi</b></small></label>
-                                <input type="text" class="form-control form-control-sm border-fetch" name="gramasi"
-                                    id="gramasi" value="{{ $formCutInputData->gramasi }}"
+                                <input type="text" class="form-control form-control-sm border-fetch" name="gramasi_marker" id="gramasi_marker"
+                                    value="{{ $formCutInputData->gramasi_marker }}"
                                     onkeyup="calculateEstAmpar(undefined, undefined, undefined, this.value);"
-                                    onchange="calculateEstAmpar(undefined, undefined, undefined, this.value);" readonly>
+                                    onchange="calculateEstAmpar(undefined, undefined, undefined, this.value);"
+                                    readonly
+                                >
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-fetch"><small><b>Cons WS</b></small></label>
-                                <input type="text" class="form-control form-control-sm border-fetch" name="cons_ws"
-                                    id="cons_ws" readonly>
+                                <input type="text" class="form-control form-control-sm border-fetch" name="cons_ws" id="cons_ws" readonly>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-fetch"><small><b>Cons Marker</b></small></label>
-                                <input type="text" class="form-control form-control-sm border-fetch"
-                                    name="cons_marker" id="cons_marker" value="{{ $formCutInputData->cons_marker }}"
-                                    onkeyup="calculateEstKain(this.value)" onchange="calculateEstKain(this.value)"
-                                    readonly>
+                                <input type="text" class="form-control form-control-sm border-fetch" name="cons_marker" id="cons_marker"
+                                    value="{{ $formCutInputData->cons_marker }}"
+                                    onkeyup="calculateEstKain(this.value)"
+                                    onchange="calculateEstKain(this.value)"
+                                    readonly
+                                >
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
                             <div class="mb-3">
                                 <label class="form-label label-calc"><small><b>Cons Act</b></small></label>
-                                <input type="number" class="form-control form-control-sm border-calc" name="cons_act"
-                                    id="cons_act"
-                                    value="{{ round($formCutInputData->cons_act, 2) > 0 ? $formCutInputData->cons_act : ($totalCutQtyPly > 0 ? round($formCutInputData->p_act / $totalCutQtyPly, 2) : '0') }}"
-                                    step=".01" readonly>
+                                <input type="number" class="form-control form-control-sm border-calc" name="cons_act" id="cons_act" step=".01"
+                                    value="{{ round($formCutInputData->cons_act, 2) > 0 ? $formCutInputData->cons_act : ($totalQtyPly > 0 ? round($formCutInputData->p_act / $totalQtyPly, 2) : '0') }}"
+                                    readonly
+                                >
                             </div>
                         </div>
                         <div class="col-6 col-md-6">
                             <div class="mb-3">
                                 <label class="form-label label-fetch"><small><b>Cons Piping</b></small></label>
-                                <input type="number" class="form-control form-control-sm border-fetch" step=".01" name="cons_pipping" id="cons_pipping" value="{{ $formCutInputData->cons_pipping ? $formCutInputData->cons_pipping : '0' }}" readonly
-                                    onkeyup="calculateEstPipping(this.value)"
-                                    onchange="calculateEstPipping(this.value)"
+                                <input type="number" class="form-control form-control-sm border-fetch" step=".01" name="cons_piping" id="cons_piping"
+                                    value="{{ $formCutInputData->cons_piping ? $formCutInputData->cons_piping : '0' }}" readonly
+                                    onkeyup="calculateEstPiping(this.value)"
+                                    onchange="calculateEstPiping(this.value)"
                                 >
                             </div>
                         </div>
@@ -371,32 +359,29 @@
                                 <label class="form-label label-calc"><small><b>Cons 1 Ampar</b></small></label>
                                 <div class="row">
                                     <div class="col-8">
-                                        <input type="number" class="form-control form-control-sm border-calc"
-                                            step=".01" name="cons_ampar" id="cons_ampar"
-                                            value="{{ $formCutInputData->cons_ampar }}" readonly>
+                                        <input type="number" class="form-control form-control-sm border-calc" step=".01" name="cons_ampar" id="cons_ampar" value="{{ $formCutInputData->cons_ampar }}" readonly>
                                     </div>
                                     <div class="col-4">
-                                        <input type="text" class="form-control form-control-sm border-calc"
-                                            name="unit_cons_ampar" id="unit_cons_ampar" value="KGM" readonly>
+                                        <input type="text" class="form-control form-control-sm border-calc" name="unit_cons_ampar" id="unit_cons_ampar" value="KGM" readonly>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label label-calc"><small><b>Est. Kebutuhan Kain
-                                            Piping</b></small></label>
+                                <label class="form-label label-calc"><small><b>Est. Kebutuhan KainPiping</b></small></label>
                                 <div class="row g-1">
                                     <div class="col-6">
-                                        <input type="number" class="form-control form-control-sm border-calc"
-                                            step=".01" name="est_pipping" id="est_pipping"
-                                            value="{{ $formCutInputData->est_pipping ? $formCutInputData->est_pipping : '0.00' }}"
-                                            readonly>
+                                        <input type="number" class="form-control form-control-sm border-calc" step=".01" name="est_piping" id="est_piping"
+                                            value="{{ $formCutInputData->est_piping ? $formCutInputData->est_piping : '0.00' }}"
+                                            readonly
+                                        >
                                     </div>
                                     <div class="col-6">
-                                        <input type="text" class="form-control form-control-sm border-calc"
-                                            name="est_pipping_unit" id="est_pipping_unit"
-                                            value="{{ strtoupper($formCutInputData->unit_panjang_marker) }}" readonly>
+                                        <input type="text" class="form-control form-control-sm border-calc" name="unit_est_piping" id="unit_est_piping"
+                                            value="{{ strtoupper($formCutInputData->unit_panjang_marker) }}"
+                                            readonly
+                                        >
                                     </div>
                                 </div>
                             </div>
@@ -406,14 +391,16 @@
                                 <label class="form-label label-calc"><small><b>Est. Kebutuhan Kain</b></small></label>
                                 <div class="row g-1">
                                     <div class="col-6">
-                                        <input type="number" class="form-control form-control-sm border-calc"
-                                            step=".01" name="est_kain" id="est_kain"
-                                            value="{{ $formCutInputData->cons_marker * $totalCutQtyPly }}" readonly>
+                                        <input type="number" class="form-control form-control-sm border-calc" step=".01" name="est_kain" id="est_kain"
+                                            value="{{ $formCutInputData->cons_marker * $totalQtyPly }}"
+                                            readonly
+                                        >
                                     </div>
                                     <div class="col-6">
-                                        <input type="text" class="form-control form-control-sm border-calc"
-                                            name="est_kain_unit" id="est_kain_unit"
-                                            value="{{ strtoupper($formCutInputData->unit_panjang_marker) }}" readonly>
+                                        <input type="text" class="form-control form-control-sm border-calc" name="unit_est_kain" id="unit_est_kain"
+                                            value="{{ strtoupper($formCutInputData->unit_panjang_marker) }}"
+                                            readonly
+                                        >
                                     </div>
                                 </div>
                             </div>
@@ -422,6 +409,8 @@
                 </div>
             </div>
         </div>
+
+        {{-- Process Two --}}
         <div class="col-md-12">
             <button class="btn btn-sb mb-3 float-end d-none" id="next-process-2" onclick="nextProcessTwo()">NEXT</button>
             <div class="card card-sb d-none" id="scan-qr-card">
@@ -438,23 +427,24 @@
                                 <div id="reader"></div>
                             </div>
                         </div>
+                        {{-- Method Switch --}}
                         <div class="col-md-12">
                             <div class="d-flex justify-content-center mb-3">
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" role="switch" id="switch-method" checked onchange="switchMethod(this)">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="switch-method" onchange="switchMethod(this)">
                                     <label class="form-check-label" id="to-scan">Scan Roll</label>
                                     <label class="form-check-label d-none" id="to-item">Pilih Barang</label>
                                 </div>
                             </div>
                         </div>
+                        {{-- Scan Method --}}
                         <div class="col-md-12" id="scan-method">
                             <div class="row align-items-end">
                                 <div class="col-md-12">
                                     <div class="mb-3">
                                         <label class="form-label label-input"><small><b>ID Roll</b></small></label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control form-control-sm border-input"
-                                                name="kode_barang" id="kode_barang">
+                                            <input type="text" class="form-control form-control-sm border-input" name="roll_id" id="roll_id">
                                             <button class="btn btn-sm btn-success" type="button" id="get-button" onclick="fetchScan()">Get</button>
                                             <button class="btn btn-sm btn-primary" type="button" id="scan-button" onclick="refreshScan()">Scan</button>
                                         </div>
@@ -463,32 +453,29 @@
                                 <div class="col-6 col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label label-scan"><small><b>ID Item</b></small></label>
-                                        <input type="text" class="form-control form-control-sm border-scan" name="id_item"
-                                            id="id_item" readonly>
+                                        <input type="text" class="form-control form-control-sm border-scan" name="item_id" id="item_id" readonly>
                                     </div>
                                 </div>
                                 <div class="col-6 col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label label-scan"><small><b>Detail Item</b></small></label>
-                                        <input type="text" class="form-control form-control-sm border-scan" name="detail_item"
-                                            id="detail_item" readonly>
+                                        <input type="text" class="form-control form-control-sm border-scan" name="item_detail" id="item_detail" readonly>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label label-input"><small><b>Color Act</b></small></label>
-                                        <input type="text" class="form-control form-control-sm border-input" name="color_act"
-                                            id="color_act">
+                                        <input type="text" class="form-control form-control-sm border-input" name="item_color" id="item_color">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mt-auto mb-3">
-                                        <button class="btn btn-sb btn-sm btn-block d-none" id="next-process-3"
-                                            onclick="nextProcessThree()">START</button>
+                                        <button class="btn btn-sb btn-sm btn-block d-none" id="next-process-3" onclick="nextProcessThree()">START</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        {{-- Item Method --}}
                         <div class="col-md-12 d-none" id="item-method">
                             <div class="row align-items-end">
                                 <div class="col-md-6">
@@ -501,8 +488,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mt-auto mb-3">
-                                        <button class="btn btn-sb btn-sm btn-block" id="next-process-3-item"
-                                            onclick="nextProcessThree()">START</button>
+                                        <button class="btn btn-sb btn-sm btn-block" id="next-process-3-item" onclick="nextProcessThree()">START</button>
                                     </div>
                                 </div>
                             </div>
@@ -511,21 +497,22 @@
                 </div>
             </div>
         </div>
+
+        {{-- Spreading Process --}}
         <div class="col-md-12">
             <div class="card card-sb d-none" id="spreading-form-card">
                 <div class="card-header">
                     <h3 class="card-title">Spreading</h3>
                     <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
-                                class="fas fa-minus"></i></button>
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                     </div>
                 </div>
                 <div class="card-body" style="display: block;">
                     <form action="#" method="post" id="spreading-form">
-                        <input type="hidden" id="id_sambungan" name="id_sambungan" readonly>
-                        <input type="hidden" id="status_sambungan" name="status_sambungan" readonly>
-                        <input type="hidden" id="current_id_roll" name="current_id_roll" readonly>
                         <input type="hidden" id="method" name="method" readonly>
+                        <input type="hidden" id="current_roll_id" name="current_roll_id" readonly>
+                        <input type="hidden" id="sambungan_id" name="sambungan_id" readonly>
+                        <input type="hidden" id="sambungan_status" name="sambungan_status" readonly>
                         <div class="row">
                             <div class="col-3">
                                 <div class="mb-3">
@@ -535,8 +522,8 @@
                             </div>
                             <div class="col-3">
                                 <div class="mb-3">
-                                    <label class="form-label label-scan" id="current_id_item_label"><small><b>Id Item</b></small></label>
-                                    <input type="text" class="form-control form-control-sm border-scan" id="current_id_item" name="current_id_item" readonly>
+                                    <label class="form-label label-scan" id="current_item_id_label"><small><b>ID Item</b></small></label>
+                                    <input type="text" class="form-control form-control-sm border-scan" id="current_item_id" name="current_item_id" readonly>
                                 </div>
                             </div>
                             <div class="col-3">
@@ -548,21 +535,23 @@
                             <div class="col-3">
                                 <div class="mb-3">
                                     <label class="form-label label-scan" id="current_roll_label"><small><b>Roll</b></small></label>
-                                    <input type="text" class="form-control form-control-sm border-scan"
-                                        id="current_roll" name="current_roll" readonly>
+                                    <input type="text" class="form-control form-control-sm border-scan" id="current_roll" name="current_roll" readonly>
                                 </div>
                             </div>
                             <div class="col-6">
-                                <label class="form-label label-scan" id="current_qty_real_label"><small><b>Qty</b></small></label>
+                                <label class="form-label label-scan" id="current_qty_roll_label"><small><b>Qty</b></small></label>
                                 <div class="d-flex mb-3">
                                     <div style="width: 60%">
-                                        <input type="number" class="form-control form-control-sm border-scan" id="current_qty_real" name="current_qty_real" readonly
-                                        onchange="setRollQtyConversion(this.value); calculateEstAmpar();"
-                                        onkeyup="setRollQtyConversion(this.value); calculateEstAmpar();">
+                                        <input type="number" class="form-control form-control-sm border-scan" id="current_qty_roll" name="current_qty_roll"
+                                            onchange="setRollQtyConversion(this.value); calculateEstAmpar();"
+                                            onkeyup="setRollQtyConversion(this.value); calculateEstAmpar();"
+                                            readonly
+                                        >
                                     </div>
                                     <div style="width: 40%">
-                                        <input type="text" class="form-control form-control-sm border-scan" id="current_unit" name="current_unit" readonly>
-                                        <select class="form-select form-select-sm d-none rounded-0" name="current_custom_unit" id="current_custom_unit" onchange="setCustomUnit(this.value); setRollQtyConversion(); calculateEstAmpar()">
+                                        <input type="text" class="form-control form-control-sm border-scan" id="current_unit_roll" name="current_unit_roll" readonly>
+
+                                        <select class="form-select form-select-sm d-none rounded-0" name="current_unit_roll_custom" id="current_unit_roll_custom" onchange="setCustomUnit(this.value); setRollQtyConversion(); calculateEstAmpar()">
                                             <option value="METER">METER</option>
                                             <option value="KGM">KGM</option>
                                             <option value="YARD">YARD</option>
@@ -578,7 +567,7 @@
                                             <input type="number" class="form-control form-control-sm border-calc" id="current_qty" name="current_qty" readonly>
                                         </div>
                                         <div style="width: 40%">
-                                            <input type="text" class="form-control form-control-sm border-calc" id="current_unit_convert" name="current_unit_convert" value="METER" readonly>
+                                            <input type="text" class="form-control form-control-sm border-calc" id="current_unit" name="current_unit" value="METER" readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -588,8 +577,7 @@
                                     <label class="form-label label-input"><small><b>Sisa Gelaran</b></small></label>
                                     <div class="d-flex mb-3">
                                         <div style="width: 60%;">
-                                            <input type="number" class="form-control form-control-sm border-input"
-                                                id="current_sisa_gelaran" name="current_sisa_gelaran" step=".01"
+                                            <input type="number" class="form-control form-control-sm border-input" id="current_sisa_gelaran" name="current_sisa_gelaran" step=".01"
                                                 onkeyup="
                                                     // restrictRemainPly();
                                                     calculateShortRoll();
@@ -599,12 +587,11 @@
                                                     // restrictRemainPly();
                                                     calculateShortRoll();
                                                     calculateRemark();
-                                                ">
+                                                "
+                                            >
                                         </div>
                                         <div style="width: 40%;">
-                                            <input type="text" class="form-control form-control-sm border-input"
-                                                id="current_sisa_gelaran_unit" name="current_sisa_gelaran_unit"
-                                                step=".01" readonly>
+                                            <input type="text" class="form-control form-control-sm border-input" id="current_sisa_gelaran_unit" name="current_sisa_gelaran_unit" step=".01" readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -614,8 +601,7 @@
                                     <label class="form-label label-input"><small><b>Sambungan</b></small></label>
                                     <div class="d-flex">
                                         <div style="width: 60%">
-                                            <input type="number" class="form-control form-control-sm border-input"
-                                                id="current_sambungan" name="current_sambungan" step=".01"
+                                            <input type="number" class="form-control form-control-sm border-input" id="current_sambungan" name="current_sambungan" step=".01"
                                                 onkeyup="
                                                     calculateTotalPemakaian();
                                                     calculateShortRoll();
@@ -628,9 +614,7 @@
                                                 ">
                                         </div>
                                         <div style="width: 40%">
-                                            <input type="text" class="form-control form-control-sm border-input"
-                                                id="current_sambungan_unit" name="current_sambungan_unit" step=".01"
-                                                readonly>
+                                            <input type="text" class="form-control form-control-sm border-input" id="current_sambungan_unit" name="current_sambungan_unit" step=".01" readonly>
                                         </div>
                                     </div>
                                 </div>
@@ -638,8 +622,7 @@
                             <div class="col-4">
                                 <div class="mb-3">
                                     <label class="form-label label-calc"><small><b>Estimasi Amparan</b></small></label>
-                                    <input type="number" class="form-control form-control-sm border-calc"
-                                        id="current_est_amparan" name="current_est_amparan" step=".01" readonly>
+                                    <input type="number" class="form-control form-control-sm border-calc" id="current_est_amparan" name="current_est_amparan" step=".01" readonly>
                                 </div>
                             </div>
                             <div class="col-4">
@@ -657,25 +640,22 @@
                                             calculateShortRoll();
                                             calculateRemark();
                                             // calculateSisaKain();
-                                        ">
+                                        "
+                                    >
                                 </div>
                             </div>
                             <div class="col-4">
                                 <div class="mb-3">
                                     <label class="form-label label-sb"><small><b>Average Time</b></small></label>
-                                    <input type="text" class="form-control form-control-sm border-sb"
-                                        id="current_average_time" name="current_average_time" readonly>
+                                    <input type="text" class="form-control form-control-sm border-sb" id="current_waktu_average" name="current_waktu_average" readonly>
                                 </div>
                             </div>
                             <div class="col-12">
                                 <div class="mb-3">
                                     <label class="form-label label-sb"><small><b>Ply Progress</b></small></label>
                                     <div class="progress border border-sb" style="height: 31px">
-                                        <p class="position-absolute"
-                                            style="top: 59%;left: 50%;transform: translate(-50%, -50%);"
-                                            id="current_ply_progress_txt"></p>
-                                        <div class="progress-bar" style="background-color: #75baeb;" role="progressbar"
-                                            id="current_ply_progress"></div>
+                                        <p class="position-absolute" style="top: 59%;left: 50%;transform: translate(-50%, -50%);" id="current_ply_progress_txt"></p>
+                                        <div class="progress-bar" style="background-color: #75baeb;" role="progressbar" id="current_ply_progress"></div>
                                     </div>
                                 </div>
                             </div>
@@ -683,8 +663,7 @@
                                 <div class="mb-3">
                                     <label class="form-label label-input"><small><b>Kepala Kain</b></small></label>
                                     <div class="input-group input-group-sm mb-3">
-                                        <input type="number" class="form-control border-input" id="current_kepala_kain"
-                                            name="current_kepala_kain" step=".01"
+                                        <input type="number" class="form-control border-input" id="current_kepala_kain" name="current_kepala_kain" step=".01"
                                             onkeyup="
                                                 calculateTotalPemakaian();
                                                 calculateShortRoll();
@@ -694,7 +673,8 @@
                                                 calculateTotalPemakaian();
                                                 calculateShortRoll();
                                                 // calculateSisaKain();
-                                            ">
+                                            "
+                                        >
                                         <span class="input-group-text input-group-unit"></span>
                                     </div>
                                 </div>
@@ -703,8 +683,7 @@
                                 <div class="mb-3">
                                     <label class="form-label label-input"><small><b>Sisa Tidak Bisa</b></small></label>
                                     <div class="input-group input-group-sm mb-3">
-                                        <input type="number" class="form-control border-input"
-                                            id="current_sisa_tidak_bisa" name="current_sisa_tidak_bisa" step=".01"
+                                        <input type="number" class="form-control border-input" id="current_sisa_tidak_bisa" name="current_sisa_tidak_bisa" step=".01"
                                             onkeyup="
                                                 calculateTotalPemakaian();
                                                 calculateShortRoll();
@@ -716,7 +695,8 @@
                                                 calculateShortRoll();
                                                 calculateRemark();
                                                 // calculateSisaKain();
-                                            ">
+                                            "
+                                        >
                                         <span class="input-group-text input-group-unit"></span>
                                     </div>
                                 </div>
@@ -725,8 +705,7 @@
                                 <div class="mb-3">
                                     <label class="form-label label-input"><small><b>Reject</b></small></label>
                                     <div class="input-group input-group-sm mb-3">
-                                        <input type="number" class="form-control form-control-sm border-input"
-                                            id="current_reject" name="current_reject" step=".01"
+                                        <input type="number" class="form-control form-control-sm border-input" id="current_reject" name="current_reject" step=".01"
                                             onkeyup="
                                                 calculateTotalPemakaian();
                                                 calculateShortRoll();
@@ -738,7 +717,8 @@
                                                 calculateShortRoll();
                                                 calculateRemark();
                                                 // calculateSisaKain();
-                                            ">
+                                            "
+                                        >
                                         <span class="input-group-text input-group-unit"></span>
                                     </div>
                                 </div>
@@ -757,7 +737,8 @@
                                                 calculateShortRoll();
                                                 calculateRemark();
                                                 // calculateSisaKain();
-                                            ">
+                                            "
+                                        >
                                         <span class="input-group-text input-group-unit"></span>
                                     </div>
                                 </div>
@@ -766,9 +747,7 @@
                                 <div class="mb-3">
                                     <label class="form-label label-calc"><small><b>Tot. Pakai /Roll</b></small></label>
                                     <div class="input-group input-group-sm mb-3">
-                                        <input type="number" class="form-control form-control-sm border-calc"
-                                            id="current_total_pemakaian_roll" name="current_total_pemakaian_roll"
-                                            step=".01" readonly>
+                                        <input type="number" class="form-control form-control-sm border-calc" id="current_total_pemakaian_roll" name="current_total_pemakaian_roll" step=".01" readonly>
                                         <span class="input-group-text input-group-unit"></span>
                                     </div>
                                 </div>
@@ -777,8 +756,7 @@
                                 <div class="mb-3">
                                     <label class="form-label label-calc"><small><b>Short Roll +/-</b></small></label>
                                     <div class="input-group input-group-sm mb-3">
-                                        <input type="number" class="form-control form-control-sm border-calc"
-                                            id="current_short_roll" name="current_short_roll" step=".01" readonly>
+                                        <input type="number" class="form-control form-control-sm border-calc" id="current_short_roll" name="current_short_roll" step=".01" readonly>
                                         <span class="input-group-text input-group-unit"></span>
                                     </div>
                                 </div>
@@ -787,8 +765,7 @@
                                 <div class="mb-3">
                                     <label class="form-label label-input"><small><b>Sisa Kain</b></small></label>
                                     <div class="input-group input-group-sm mb-3">
-                                        <input type="number" class="form-control form-control-sm border-input"
-                                            id="current_sisa_kain" name="current_sisa_kain" step=".01"
+                                        <input type="number" class="form-control form-control-sm border-input" id="current_sisa_kain" name="current_sisa_kain" step=".01"
                                             onkeyup="
                                                 calculateShortRoll();
                                                 calculateRemark();
@@ -796,7 +773,8 @@
                                             onchange="
                                                 calculateShortRoll();
                                                 calculateRemark();
-                                            ">
+                                            "
+                                        >
                                         <span class="input-group-text input-group-unit"></span>
                                     </div>
                                 </div>
@@ -805,32 +783,25 @@
                                 <div class="mb-3">
                                     <label class="form-label label-input"><small><b>Remark</b></small></label>
                                     <div class="input-group input-group-sm mb-3">
-                                        <input type="number" class="form-control form-control-sm border-input"
-                                            id="current_remark" name="current_remark" step=".01">
+                                        <input type="number" class="form-control form-control-sm border-input" id="current_remark" name="current_remark" step=".01">
                                         <span class="input-group-text input-group-unit"></span>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-6 col-md-6 my-3">
-                                <button type="button" class="fs-5 fw-bold btn btn-success btn-sm w-100 h-100"
-                                    style="min-height: 90px !important;" id="startLapButton"
-                                    onclick="startTimeRecord()">START</button>
-                                <button type="button" class="fs-5 fw-bold btn btn-primary btn-sm d-none w-100 h-100"
-                                    style="min-height: 90px !important;" id="nextLapButton"
-                                    onclick="addNewTimeRecord()">NEXT LAP</button>
+                                <button type="button" class="fs-5 fw-bold btn btn-success btn-sm w-100 h-100" style="min-height: 90px !important;" id="startLapButton"onclick="startTimeRecord()">START</button>
+                                <button type="button" class="fs-5 fw-bold btn btn-primary btn-sm d-none w-100 h-100" style="min-height: 90px !important;" id="nextLapButton"onclick="addNewTimeRecord()">NEXT LAP</button>
                             </div>
                             <div class="col-6 col-md-6 my-3">
                                 <div class="row">
                                     <div class="col-5">
-                                        <input type="text" class="form-control form-control-sm" id="minutes"
-                                            value="00" readonly class="mx-1">
+                                        <input type="text" class="form-control form-control-sm" id="minutes" value="00" readonly class="mx-1">
                                     </div>
                                     <div class="col-2">
                                         <center>:</center>
                                     </div>
                                     <div class="col-5">
-                                        <input type="text" class="form-control form-control-sm" id="seconds"
-                                            value="00" readonly class="mx-1">
+                                        <input type="text" class="form-control form-control-sm" id="seconds" value="00" readonly class="mx-1">
                                     </div>
                                 </div>
                                 <div class="w-100 table-responsive mt-3" style="max-height: 150px; overflow-y: auto;">
@@ -855,43 +826,37 @@
                 </div>
             </div>
         </div>
+        {{-- Loss Time --}}
         <div class="col-md-12">
-            <div class="card card-sb collapsed-card d-none" id="lost-time-card">
+            <div class="card card-sb collapsed-card d-none" id="loss-time-card">
                 <div class="card-header">
                     <h3 class="card-title">Loss Time</h3>
                     <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
-                                class="fas fa-minus"></i></button>
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                     </div>
                 </div>
                 <div class="card-body" style="display: block;">
                     <div class="row">
                         <div class="col-6 col-md-6 my-3">
-                            <button type="button" class="fs-5 fw-bold btn btn-danger btn-sm w-100 h-100"
-                                style="min-height: 90px !important;" id="startLostButton"
-                                onclick="startLostTime()">START</button>
-                            <button type="button" class="fs-5 fw-bold btn btn-warning btn-sm d-none w-100 h-100"
-                                style="min-height: 90px !important;" id="nextLostButton"
-                                onclick="addNewLostTime()">STOP</button>
+                            <button type="button" class="fs-5 fw-bold btn btn-danger btn-sm w-100 h-100" style="min-height: 90px !important;" id="startLossButton" onclick="startLossTime()">START</button>
+                            <button type="button" class="fs-5 fw-bold btn btn-warning btn-sm d-none w-100 h-100" style="min-height: 90px !important;" id="nextLossButton" onclick="addNewLossTime()">STOP</button>
                         </div>
                         <div class="col-6 col-md-6 my-3">
                             <div class="row">
                                 <div class="col-5">
-                                    <input type="text" class="form-control form-control-sm" id="lostMinutes"
-                                        value="00" readonly class="mx-1">
+                                    <input type="text" class="form-control form-control-sm" id="lostMinutes" value="00" readonly class="mx-1">
                                 </div>
                                 <div class="col-2">
                                     <center>:</center>
                                 </div>
                                 <div class="col-5">
-                                    <input type="text" class="form-control form-control-sm" id="lostSeconds"
-                                        value="00" readonly class="mx-1">
+                                    <input type="text" class="form-control form-control-sm" id="lostSeconds" value="00" readonly class="mx-1">
                                 </div>
                             </div>
                             <div class="w-100 h-100 table-responsive mt-3" style="max-height: 150px; overflow-y: auto;">
-                                <form action="#" method="post" id="lost-time-form">
-                                    <input type="hidden" id="current_lost_time" name="current_lost_time">
-                                    <table class="table table-bordered table-sm" id="lostTimeTable">
+                                <form action="#" method="post" id="loss-time-form">
+                                    <input type="hidden" id="current_loss_time" name="current_loss_time">
+                                    <table class="table table-bordered table-sm" id="lossTimeTable">
                                         <thead>
                                             <tr>
                                                 <th>No.</th>
@@ -909,13 +874,13 @@
                 </div>
             </div>
         </div>
+        {{-- Summary Roll --}}
         <div class="col-md-12">
             <div class="card card-sb d-none" id="summary-card">
                 <div class="card-header">
                     <h3 class="card-title">Summary</h3>
                     <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i
-                                class="fas fa-minus"></i></button>
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                     </div>
                 </div>
                 <div class="card-body" style="display: block;">
@@ -985,8 +950,7 @@
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label label-calc"><small><b>Unit</b></small></label>
-                                        <select class="form-select form-select-sm border-calc"
-                                            name="unit_cons_actual_gelaran" id="unit_cons_actual_gelaran" disabled>
+                                        <select class="form-select form-select-sm border-calc" name="unit_cons_actual_gelaran" id="unit_cons_actual_gelaran" disabled>
                                             <option value="meter">METER</option>
                                             <option value="yard">YARD</option>
                                             <option value="kgm">KGM</option>
@@ -1020,8 +984,7 @@
                                 <div class="col-md-3">
                                     <div class="mb-3">
                                         <label class="form-label label-calc"><small><b>Unit</b></small></label>
-                                        <select class="form-select form-select-sm border-calc"
-                                            name="unit_cons_actual_gelaran_short_rolless" id="unit_cons_actual_gelaran_short_rolless" disabled>
+                                        <select class="form-select form-select-sm border-calc" name="unit_cons_actual_gelaran_short_rolless" id="unit_cons_actual_gelaran_short_rolless" disabled>
                                             <option value="meter">METER</option>
                                             <option value="yard">YARD</option>
                                             <option value="kgm">KGM</option>
@@ -1049,8 +1012,7 @@
                                 <div class="col-md-12">
                                     <div class="mb-3">
                                         <label class="form-label label-input"><small><b>Operator</b></small></label>
-                                        <input type="text" class="form-control form-control-sm border-input"
-                                            name="operator" id="operator" value="{{ $formCutInputData->operator }}">
+                                        <input type="text" class="form-control form-control-sm border-input" name="operator" id="operator" value="{{ $formCutInputData->operator }}">
                                     </div>
                                 </div>
                             </div>
@@ -1060,35 +1022,18 @@
             </div>
         </div>
         <div class="col-md-12">
-            <button class="btn btn-block btn-sb d-none" id="finish-process" onclick="finishProcess()">SELESAI
-                PENGERJAAN</button>
+            <button class="btn btn-block btn-sb d-none" id="finish-process" onclick="finishProcess()">SELESAI PENGERJAAN</button>
         </div>
     </div>
 @endsection
 
 @section('custom-script')
-    <!-- Select2 -->
-    <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
-
-    <script>
-        // Select2 Autofocus
-        $(document).on('select2:open', () => {
-            document.querySelector('.select2-search__field').focus();
-        });
-
-        $('.select2').select2();
-
-        $('.select2bs4').select2({
-            theme: 'bootstrap4',
-            containerCssClass: 'form-control-sm'
-        });
-    </script>
-
     <script>
         // Variable List :
             // -Form Cut Input Header Data-
             var id = document.getElementById("id").value;
-            var status = document.getElementById("status").value;
+            var noForm = document.getElementById("no_form").value;
+            var statusForm = document.getElementById("status_form").value;
             var startTime = document.getElementById("start-time");
             var finishTime = document.getElementById("finish-time");
 
@@ -1108,7 +1053,7 @@
 
             // -Ratio & Qty Cuy-
             var totalRatio = document.getElementById('total_ratio').value;
-            var totalQtyCut = document.getElementById('total_qty_cut_ply').value;
+            var totalQtyCut = document.getElementById('total_qty_ply').value;
 
             // -Method-
             var method = "scan";
@@ -1136,7 +1081,7 @@
                 });
 
                 // -Kode Barang Manual Input Event-
-                $('#kode_barang').keyup(function(e) {
+                $('#roll_id').keyup(function(e) {
                     if (e.key === "Enter") {
                         e.preventDefault();
 
@@ -1188,7 +1133,7 @@
 
                         startProcessButton.classList.add("d-none");
                         nextProcessOneButton.classList.remove("d-none");
-                        document.getElementById("lost-time-card").classList.remove("d-none");
+                        document.getElementById("loss-time-card").classList.remove("d-none");
                     }
                 });
             }
@@ -1206,7 +1151,7 @@
                         if (res) {
                             console.log(res);
 
-                            status = "PENGERJAAN FORM CUTTING";
+                            statusForm = "form";
                         }
                     }
                 });
@@ -1234,8 +1179,7 @@
                     },
                     success: function(res) {
                         if (res) {
-                            console.log(res);
-                            status = "PENGERJAAN FORM CUTTING DETAIL";
+                            statusForm = "form detail";
                         }
                     }
                 });
@@ -1255,12 +1199,12 @@
                 var lActual = document.getElementById('l_act').value;
                 var lUnitActual = document.getElementById('unit_l_act').value;
                 var consActual = document.getElementById('cons_act').value;
-                var consPipping = document.getElementById('cons_pipping').value;
+                var consPipping = document.getElementById('cons_piping').value;
                 var consAmpar = document.getElementById('cons_ampar').value;
-                var estPipping = document.getElementById('est_pipping').value;
-                var estPippingUnit = document.getElementById('est_pipping_unit').value;
+                var estPiping = document.getElementById('est_piping').value;
+                var unitEstPiping = document.getElementById('unit_est_piping').value;
                 var estKain = document.getElementById('est_kain').value;
-                var estKainUnit = document.getElementById('est_kain_unit').value;
+                var unitEstKain = document.getElementById('unit_est_kain').value;
 
                 clearModified();
 
@@ -1276,12 +1220,12 @@
                         l_act: lActual,
                         unit_l_act: lUnitActual,
                         cons_act: consActual,
-                        cons_pipping: consPipping,
+                        cons_piping: consPipping,
                         cons_ampar: consAmpar,
-                        est_pipping: estPipping,
-                        est_pipping_unit: estPippingUnit,
+                        est_piping: estPiping,
+                        unit_est_piping: unitEstPiping,
                         est_kain: estKain,
-                        est_kain_unit: estKainUnit,
+                        unit_est_kain: unitEstKain,
                     },
                     success: function(res) {
                         if (res) {
@@ -1294,9 +1238,9 @@
                                 nextProcessThreeButton.classList.remove("d-none");
 
                                 initScan();
-                                getItemList()
+                                getItemList();
 
-                                status = "PENGERJAAN FORM CUTTING SPREAD"
+                                statusForm = "form spreading";
                             }
                         }
                     },
@@ -1332,13 +1276,13 @@
 
                 switch (method) {
                     case "scan" :
-                        validation = isNotNull(document.getElementById("id_item").value) && isNotNull(document.getElementById("detail_item").value) && isNotNull(document.getElementById("color_act").value);
+                        validation = isNotNull(document.getElementById("item_id").value) && isNotNull(document.getElementById("item_detail").value) && isNotNull(document.getElementById("item_color").value);
                         break;
                     case "item" :
                         validation = isNotNull(document.getElementById("select_item").value);
                         break;
                     default :
-                        validation = isNotNull(document.getElementById("id_item").value) && isNotNull(document.getElementById("detail_item").value) && isNotNull(document.getElementById("color_act").value);
+                        validation = isNotNull(document.getElementById("item_id").value) && isNotNull(document.getElementById("item_detail").value) && isNotNull(document.getElementById("item_color").value);
                         break;
                 }
 
@@ -1384,16 +1328,16 @@
                     "p_act": $("#p_act").val(),
                     "unit_p_act": $("#unit_p_act").val(),
                     "comma_act": $("#comma_act").val(),
-                    "no_form_cut_input": $("#no_form").val(),
-                    "no_meja": $("#no_meja").val(),
-                    "color_act": $("#color_act").val(),
-                    "detail_item": $("#detail_item").val(),
+                    "no_form": $("#no_form").val(),
+                    "meja_id": $("#meja_id").val(),
+                    "item_color": $("#item_color").val(),
+                    "item_detail": $("#item_detail").val(),
                     "metode": method,
                 }
 
                 spreadingForm.forEach((value, key) => dataObj[key] = value);
 
-                if ($("#status_sambungan").val() != "extension") {
+                if ($("#sambungan_status").val() != "extension") {
                     // Not an Extension :
                     return $.ajax({
                         url: '{{ route('store-time-form-cut-input') }}',
@@ -1519,13 +1463,15 @@
 
             // -Store This Time Record Transaction-
             function storeThisTimeRecord() {
+                document.getElementById("loading").classList.remove("d-none");
+
                 let spreadingForm = new FormData(document.getElementById("spreading-form"));
 
                 let dataObj = {
-                    "no_form_cut_input": $("#no_form").val(),
-                    "color_act": $("#color_act").val(),
-                    "detail_item": $("#detail_item").val(),
-                    "no_meja": $("#no_meja").val(),
+                    "no_form": $("#no_form").val(),
+                    "item_color": $("#item_color").val(),
+                    "item_detail": $("#item_detail").val(),
+                    "meja_id": $("#meja_id").val(),
                     "metode": method,
                     "lap": lap
                 }
@@ -1538,9 +1484,24 @@
                     dataType: 'json',
                     data: dataObj,
                     success: function(res) {
+                        document.getElementById("loading").classList.add("d-none");
+
                         if (res) {
                             console.log(res);
                         }
+                    }, error: function(jqXHR) {
+                        document.getElementById("loading").classList.add("d-none");
+
+                        console.log(jqXHR);
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Koneksi Hilang',
+                            text: 'Terjadi Kesalahan',
+                            showConfirmButton: true,
+                            confirmButtonText: 'Oke',
+                            confirmButtonColor: "#6531a0",
+                        });
                     }
                 });
             }
@@ -1617,7 +1578,7 @@
                                         window.close();
                                     })
 
-                                    status = "SELESAI PENGERJAAN";
+                                    statusForm = "finish";
                                 }
                             },
                             error: function(jqXHR) {
@@ -1711,7 +1672,7 @@
             // -Convert Roll Qty Actual-
             function rollQtyConversion(rollQtyVar, unitQtyVar, gramasi = 0, pActual = 0, lActual = 0, commaActual = 0) {
                 let rollQtyConverted = 0;
-                let gramasiVar = gramasi > 0 ? Number(gramasi) : Number(document.getElementById("gramasi").value);
+                let gramasiVar = gramasi > 0 ? Number(gramasi) : Number(document.getElementById("gramasi_marker").value);
                 let pActualVar = pActual > 0 ? Number(pActual) : Number(document.getElementById("p_act").value);
                 let lActualVar = lActual > 0 ? Number(lActual) : Number(document.getElementById("l_act").value);
                 let commaActualVar = commaActual > 0 ? Number(commaActual) : Number(document.getElementById("comma_act").value);
@@ -1741,8 +1702,8 @@
             }
 
             function setRollQtyConversion(rollQty = 0, unitQty) {
-                let rollQtyVar = rollQty > 0 ? Number(rollQty) : Number(document.getElementById("current_qty_real").value);
-                let unitQtyVar = unitQty ? unitQty : document.getElementById("current_unit").value;
+                let rollQtyVar = rollQty > 0 ? Number(rollQty) : Number(document.getElementById("current_qty_roll").value);
+                let unitQtyVar = unitQty ? unitQty : document.getElementById("current_unit_roll").value;
 
                 document.getElementById("current_qty").value = rollQtyConversion(rollQtyVar, unitQtyVar);
             }
@@ -1750,7 +1711,7 @@
             function conversion(qty, unit, unitBefore) {
                 console.log("convert", qty, unitBefore, unit);
 
-                let gramasiVar = Number(document.getElementById("gramasi").value);
+                let gramasiVar = Number(document.getElementById("gramasi_marker").value);
                 let pActualVar = Number(document.getElementById("p_act").value);
                 let lActualVar = Number(document.getElementById("l_act").value);
                 let commaActualVar = Number(document.getElementById("comma_act").value);
@@ -1803,7 +1764,7 @@
                 let unitPActualVar = document.getElementById("unit_p_act").value;
                 let commaActualVar = Number(document.getElementById("comma_act").value);
                 let lActualVar = Number(document.getElementById("l_act").value);
-                let gramasiVar = Number(document.getElementById("gramasi").value);
+                let gramasiVar = Number(document.getElementById("gramasi_marker").value);
                 let lActualMeter = lActualVar / 100;
 
                 let pActualFinal = pActualCommaActual(pActualVar, unitPActualVar, commaActualVar);
@@ -1830,12 +1791,12 @@
             }
 
             // -Calculate Est. Piping-
-            function calculateEstPipping(consPipping = 0) {
+            function calculateEstPiping(consPipping = 0) {
                 let consPippingVar = consPipping;
 
-                let estPipping = consPippingVar * totalQtyCut;
+                let estPiping = consPippingVar * totalQtyCut;
 
-                document.getElementById('est_pipping').value = estPipping.round(2);
+                document.getElementById('est_piping').value = estPiping.round(2);
             }
 
             // -Calculate Est. Kain-
@@ -1853,17 +1814,17 @@
                 let pActualVar = Number(document.getElementById("p_act").value);
                 let lActualVar = Number(document.getElementById("l_act").value);
                 let commaActualVar = Number(document.getElementById("comma_act").value);
-                let unitQtyVar = document.getElementById("current_unit").value;
+                let unitQtyVar = document.getElementById("current_unit_roll").value;
                 let unitPActualVar = document.getElementById("unit_p_act").value;
                 let unitCommaActualVar = document.getElementById("unit_comma_act").value;
-                let gramasiVar = Number(document.getElementById("gramasi").value);
+                let gramasiVar = Number(document.getElementById("gramasi_marker").value);
 
                 let pActualConverted = 0;
 
                 if (unitQtyVar != "KGM") {
                     pActualConverted = pActualCommaActual(pActualVar, unitPActualVar, commaActualVar);
                 } else {
-                    qtyVar = Number(document.getElementById("current_qty_real").value);
+                    qtyVar = Number(document.getElementById("current_qty_roll").value);
 
                     pActualConverted = pActualConversion(pActualVar, unitPActualVar, commaActualVar, lActualVar, gramasiVar, unitQtyVar);
                 }
@@ -1881,20 +1842,20 @@
                 let sisaTidakBisaVar = Number(document.getElementById("current_sisa_tidak_bisa").value);
                 let rejectVar = Number(document.getElementById("current_reject").value);
                 let lActualVar = Number(document.getElementById("l_act").value);
-                let gramasiVar = Number(document.getElementById("gramasi").value);
-                let unitQtyVar = document.getElementById("current_unit").value;
+                let gramasiVar = Number(document.getElementById("gramasi_marker").value);
+                let unitQtyVar = document.getElementById("current_unit_roll").value;
                 let unitPActualVar = document.getElementById("unit_p_act").value;
                 let commaActualVar = Number(document.getElementById("comma_act").value);
 
                 let pActualConverted = 0;
 
-                if (document.getElementById("status_sambungan").value == "extension") {
+                if (document.getElementById("sambungan_status").value == "extension") {
                     pActualConverted = document.getElementById("current_sambungan").value;
                 } else {
                     if (unitQtyVar != "KGM") {
                         pActualConverted = pActualCommaActual(pActualVar, unitPActualVar, commaActualVar);
                     } else {
-                        qtyVar = Number(document.getElementById("current_qty_real").value);
+                        qtyVar = Number(document.getElementById("current_qty_roll").value);
 
                         pActualConverted = pActualConversion(pActualVar, unitPActualVar, commaActualVar, lActualVar, gramasiVar, unitQtyVar);
                     }
@@ -1916,8 +1877,8 @@
                 let rejectVar = Number(document.getElementById("current_reject").value);
                 let sambunganVar = Number(document.getElementById("current_sambungan").value);
                 let qtyVar = Number(document.getElementById("current_qty").value);
-                let unitQtyVar = document.getElementById("current_unit").value;
-                let gramasiVar = Number(document.getElementById("gramasi").value);
+                let unitQtyVar = document.getElementById("current_unit_roll").value;
+                let gramasiVar = Number(document.getElementById("gramasi_marker").value);
                 let unitPActualVar = document.getElementById("unit_p_act").value;
                 let lActualVar = Number(document.getElementById("l_act").value);
                 let commaActualVar = Number(document.getElementById("comma_act").value);
@@ -1926,13 +1887,13 @@
 
                 let pActualConverted = 0;
 
-                if (document.getElementById("status_sambungan").value == "extension") {
+                if (document.getElementById("sambungan_status").value == "extension") {
                     pActualConverted = document.getElementById("current_sambungan").value;
                 } else {
                     if (unitQtyVar != "KGM") {
                         pActualConverted = pActualCommaActual(pActualVar, unitPActualVar, commaActualVar);
                     } else {
-                        qtyVar = Number(document.getElementById("current_qty_real").value);
+                        qtyVar = Number(document.getElementById("current_qty_roll").value);
 
                         pActualConverted = pActualConversion(pActualVar, unitPActualVar, commaActualVar, lActualVar, gramasiVar, unitQtyVar);
                     }
@@ -1958,8 +1919,8 @@
                 let rejectVar = Number(document.getElementById("current_reject").value);
                 let sambunganVar = Number(document.getElementById("current_sambungan").value);
                 let qtyVar = Number(document.getElementById("current_qty").value);
-                let unitQtyVar = document.getElementById("current_unit").value;
-                let gramasiVar = Number(document.getElementById("gramasi").value);
+                let unitQtyVar = document.getElementById("current_unit_roll").value;
+                let gramasiVar = Number(document.getElementById("gramasi_marker").value);
                 let unitPActualVar = document.getElementById("unit_p_act").value;
                 let lActualVar = Number(document.getElementById("l_act").value);
                 let commaActualVar = Number(document.getElementById("comma_act").value);
@@ -1968,13 +1929,13 @@
 
                 let pActualConverted = 0;
 
-                if (document.getElementById("status_sambungan").value == "extension") {
+                if (document.getElementById("sambungan_status").value == "extension") {
                     pActualConverted = document.getElementById("current_sambungan").value;
                 } else {
                     if (unitQtyVar != "KGM") {
                         pActualConverted = pActualCommaActual(pActualVar, unitPActualVar, commaActualVar);
                     } else {
-                        qtyVar = Number(document.getElementById("current_qty_real").value);
+                        qtyVar = Number(document.getElementById("current_qty_roll").value);
 
                         pActualConverted = pActualConversion(pActualVar, unitPActualVar, commaActualVar, lActualVar, gramasiVar, unitQtyVar);
                     }
@@ -1997,20 +1958,20 @@
                 let lActualVar = Number(document.getElementById("l_act").value);
                 let unitPActualVar = document.getElementById("unit_p_act").value;
                 let commaActualVar = Number(document.getElementById("comma_act").value);
-                let gramasiVar = Number(document.getElementById("gramasi").value);
+                let gramasiVar = Number(document.getElementById("gramasi_marker").value);
 
                 let qtyVar = Number(document.getElementById("current_qty").value);
-                let unitQtyVar = document.getElementById("current_unit").value;
+                let unitQtyVar = document.getElementById("current_unit_roll").value;
 
                 let pActualConverted = 0;
 
-                if (document.getElementById("status_sambungan").value == "extension") {
+                if (document.getElementById("sambungan_status").value == "extension") {
                     pActualConverted = document.getElementById("current_sambungan").value;
                 } else {
                     if (unitQtyVar != "KGM") {
                         pActualConverted = pActualCommaActual(pActualVar, unitPActualVar, commaActualVar);
                     } else {
-                        qtyVar = Number(document.getElementById("current_qty_real").value);
+                        qtyVar = Number(document.getElementById("current_qty_roll").value);
 
                         pActualConverted = pActualConversion(pActualVar, unitPActualVar, commaActualVar, lActualVar, gramasiVar, unitQtyVar);
                     }
@@ -2026,12 +1987,12 @@
                 let sisaGelaranVar = sisaGelaran > 0 ? Number(sisaGelaran) : Number(document.getElementById("current_sisa_gelaran").value);
                 let unitSisaGelaranVar = unitSisaGelaran ? unitSisaGelaran : document.getElementById("current_sisa_gelaran_unit").value;
                 let qtyVar = Number(document.getElementById("current_qty").value);
-                let unitQtyVar = document.getElementById("current_unit").value;
+                let unitQtyVar = document.getElementById("current_unit_roll").value;
                 let pActualVar = Number(document.getElementById('p_act').value);
                 let unitPActualVar = document.getElementById('unit_p_act').value;
                 let commaActualVar = Number(document.getElementById('comma_act').value);
                 let lActualVar = Number(document.getElementById('l_act').value);
-                let gramasiVar = Number(document.getElementById('gramasi').value);
+                let gramasiVar = Number(document.getElementById('gramasi_marker').value);
 
                 let pActualConverted = 0;
                 let sisaGelaranConverted = 0;
@@ -2071,7 +2032,7 @@
             //     let unitPActualVar = document.getElementById("unit_p_act").value;
             //     let lActualVar = Number(document.getElementById("l_act").value);
             //     let commaActualVar = Number(document.getElementById("comma_act").value);
-            //     let gramasiVar = Number(document.getElementById("gramasi").value);
+            //     let gramasiVar = Number(document.getElementById("gramasi_marker").value);
 
             //     if (isNotNull(unitVar) && isNotNull(pipingVar) && isNotNull(lembarVar) && isNotNull(pActualVar) && isNotNull(totalQtyCutVar)) {
             //         let consActualGelaran = 0;
@@ -2080,7 +2041,7 @@
 
             //         let pActualConverted = 0;
 
-            //         if (document.getElementById("status_sambungan").value == "extension") {
+            //         if (document.getElementById("sambungan_status").value == "extension") {
             //             pActualConverted = document.getElementById("current_sambungan").value;
             //         } else {
             //             if (unitVar != "KGM") {
@@ -2169,7 +2130,7 @@
             // -Get Cons. WS Data-
             function getNumberData() {
                 return $.ajax({
-                    url: '{{ route('get-number-form-cut-input') }}',
+                    url: '{{ route('get-general-number') }}',
                     type: 'get',
                     data: {
                         act_costing_id: $("#act_costing_id").val(),
@@ -2189,19 +2150,19 @@
 
             // -Check Form Cut Input Status-
             async function checkStatus() {
-                $('#lost-time-card').CardWidget('collapse');
+                $('#loss-time-card').CardWidget('collapse');
 
-                checkLostTime(id);
+                checkLostTime(noForm);
 
-                if (status == "PENGERJAAN FORM CUTTING") {
+                if (statusForm == "form") {
                     startProcessButton.classList.add("d-none");
                     nextProcessOneButton.classList.remove("d-none");
 
-                    document.getElementById("lost-time-card").classList.remove("d-none");
+                    document.getElementById("loss-time-card").classList.remove("d-none");
                 }
 
-                if (status == "PENGERJAAN FORM CUTTING DETAIL") {
-                    document.getElementById("lost-time-card").classList.remove("d-none");
+                if (statusForm == "form detail") {
+                    document.getElementById("loss-time-card").classList.remove("d-none");
 
                     startProcessButton.classList.add("d-none");
                     nextProcessOneButton.classList.add("d-none");
@@ -2211,10 +2172,10 @@
                     nextProcessTwoButton.classList.remove("d-none");
                 }
 
-                if (status == "PENGERJAAN FORM CUTTING SPREAD") {
-                    document.getElementById("lost-time-card").classList.remove("d-none");
+                if (statusForm == "form spreading") {
+                    document.getElementById("loss-time-card").classList.remove("d-none");
 
-                    if ($("status_sambungan").val() != "extension") {
+                    if ($("sambungan_status").val() != "extension") {
                         document.getElementById("current_sambungan").setAttribute('readonly', true);
                         document.getElementById("current_sisa_gelaran").removeAttribute('readonly');
                     }
@@ -2243,8 +2204,8 @@
                     }
                 }
 
-                if (status == "SELESAI PENGERJAAN") {
-                    document.getElementById("lost-time-card").classList.remove("d-none");
+                if (statusForm == "finish") {
+                    document.getElementById("loss-time-card").classList.remove("d-none");
 
                     startProcessButton.classList.add("d-none");
                     nextProcessOneButton.classList.add("d-none");
@@ -2291,9 +2252,9 @@
                 document.getElementById('l_act').setAttribute('readonly', true);
                 document.getElementById('cons_ws').setAttribute('readonly', true);
                 document.getElementById('cons_act').setAttribute('readonly', true);
-                document.getElementById('cons_pipping').setAttribute('readonly', true);
+                document.getElementById('cons_piping').setAttribute('readonly', true);
                 document.getElementById('cons_ampar').setAttribute('readonly', true);
-                document.getElementById('est_pipping').setAttribute('readonly', true);
+                document.getElementById('est_piping').setAttribute('readonly', true);
                 document.getElementById('est_kain').setAttribute('readonly', true);
                 document.getElementById('operator').setAttribute('readonly', true);
                 document.getElementById('unit_cons_actual_gelaran').setAttribute('readonly', true);
@@ -2343,33 +2304,33 @@
             }
 
             function addColorSpreading() {
-                document.getElementById("current_id_item_label").classList.add("label-scan");
-                document.getElementById("current_id_item").classList.add("border-scan");
+                document.getElementById("current_item_id_label").classList.add("label-scan");
+                document.getElementById("current_item_id").classList.add("border-scan");
                 document.getElementById("current_lot_label").classList.add("label-scan");
                 document.getElementById("current_lot").classList.add("border-scan");
                 document.getElementById("current_roll_label").classList.add("label-scan");
                 document.getElementById("current_roll").classList.add("border-scan");
-                document.getElementById("current_qty_real_label").classList.add("label-scan");
-                document.getElementById("current_qty_real").classList.add("border-scan");
-                document.getElementById("current_unit").classList.add("border-scan");
+                document.getElementById("current_qty_roll_label").classList.add("label-scan");
+                document.getElementById("current_qty_roll").classList.add("border-scan");
+                document.getElementById("current_unit_roll").classList.add("border-scan");
                 document.getElementById("current_qty_label").classList.add("label-calc");
                 document.getElementById("current_qty").classList.add("border-calc");
-                document.getElementById("current_unit_convert").classList.add("border-calc");
+                document.getElementById("current_unit").classList.add("border-calc");
             }
 
             function removeColorSpreading() {
-                document.getElementById("current_id_item_label").classList.remove("label-scan");
-                document.getElementById("current_id_item").classList.remove("border-scan");
+                document.getElementById("current_item_id_label").classList.remove("label-scan");
+                document.getElementById("current_item_id").classList.remove("border-scan");
                 document.getElementById("current_lot_label").classList.remove("label-scan");
                 document.getElementById("current_lot").classList.remove("border-scan");
                 document.getElementById("current_roll_label").classList.remove("label-scan");
                 document.getElementById("current_roll").classList.remove("border-scan");
-                document.getElementById("current_qty_real_label").classList.remove("label-scan");
-                document.getElementById("current_qty_real").classList.remove("border-scan");
-                document.getElementById("current_unit").classList.remove("border-scan");
+                document.getElementById("current_qty_roll_label").classList.remove("label-scan");
+                document.getElementById("current_qty_roll").classList.remove("border-scan");
+                document.getElementById("current_unit_roll").classList.remove("border-scan");
                 document.getElementById("current_qty_label").classList.remove("label-calc");
                 document.getElementById("current_qty").classList.remove("border-calc");
-                document.getElementById("current_unit_convert").classList.remove("border-calc");
+                document.getElementById("current_unit").classList.remove("border-calc");
             }
 
             // Get Item List Module :
@@ -2388,7 +2349,7 @@
                             res.forEach((item) => {
                                 let option = document.createElement("option");
                                 option.text = item.itemdesc;
-                                option.value = item.id_item;
+                                option.value = item.item_id;
 
                                 document.getElementById("select_item").appendChild(option);
                             })
@@ -2403,18 +2364,18 @@
                 currentScannedItem = null;
 
                 if (element.value && element.value != "") {
-                    document.getElementById("kode_barang").value = "";
-                    document.getElementById("current_id_roll").value = "";
+                    document.getElementById("roll_id").value = "";
+                    document.getElementById("current_roll_id").value = "";
 
-                    document.getElementById("id_item").value = element.value;
-                    document.getElementById("detail_item").value = $("#select_item option:selected").text();
+                    document.getElementById("item_id").value = element.value;
+                    document.getElementById("item_detail").value = $("#select_item option:selected").text();
 
-                    currentScannedItem = {"id_item": element.value, "detail_item": $("#select_item option:selected").text(), "unit": "METER"};
+                    currentScannedItem = {"item_id": element.value, "item_detail": $("#select_item option:selected").text(), "unit": "METER"};
                 }
             }
 
             function setCustomUnit(unit) {
-                document.getElementById("current_unit").value = unit;
+                document.getElementById("current_unit_roll").value = unit;
 
                 let inputGroupUnit = document.getElementsByClassName("input-group-unit");
                 let unitSimplified = unit != "KGM" ? "M" : "KG";
@@ -2455,10 +2416,12 @@
             // -Check Spreading Form-
             function checkSpreadingForm() {
                 let noForm = document.getElementById("no_form").value;
-                let noMeja = document.getElementById("no_meja").value;
+                let mejaId = document.getElementById("meja_id").value;
+
+                console.log(noForm, mejaId);
 
                 $.ajax({
-                    url: '{{ route('check-spreading-form-cut-input') }}/' + noForm + '/' + noMeja,
+                    url: '{{ route('check-spreading-form-cut-input') }}/' + noForm + '/' + mejaId,
                     type: 'get',
                     dataType: 'json',
                     success: function(res) {
@@ -2473,14 +2436,16 @@
                                 unitSisaGelaran = res.unitSisaGelaran;
                                 method = res.data.metode ? res.data.metode : "scan";
 
+                                console.log(spreadingFormData)
+
                                 setSpreadingForm(spreadingFormData, sisaGelaran, unitSisaGelaran);
 
                                 checkTimeRecordLap(res.data.id);
 
-                                document.getElementById("kode_barang").value = res.data.id_roll;
-                                document.getElementById("id_item").value = res.data.id_item;
-                                document.getElementById("color_act").value = res.data.color_act;
-                                document.getElementById("detail_item").value = res.data.detail_item;
+                                document.getElementById("roll_id").value = res.data.roll_id;
+                                document.getElementById("item_id").value = res.data.item_id;
+                                document.getElementById("item_color").value = res.data.item_color;
+                                document.getElementById("item_detail").value = res.data.item_detail;
 
                                 $('#spreading-form-card').CardWidget('expand');
                                 $('#spreading-form-card').removeClass("d-none");
@@ -2505,33 +2470,33 @@
                 if (method == "item") {
                     openItemSpreading();
 
-                    document.getElementById("current_unit").value = "METER";
-                    document.getElementById("current_custom_unit").value = "METER";
+                    document.getElementById("current_unit_roll").value = "METER";
+                    document.getElementById("current_unit_roll_custom").value = "METER";
                 }
 
                 // spreading form data set
                 let convertedQty = rollQtyConversion(data.qty, data.unit);
 
-                data.id_roll ? document.getElementById("kode_barang").value = data.id_roll : '';
-                data.id_item ? document.getElementById("id_item").value = data.id_item : '';
-                data.detail_item ? document.getElementById("detail_item").value = data.detail_item : '';
-                data.color_act ? document.getElementById("color_act").value = data.color_act : '';
-                data.id_roll ? document.getElementById("current_id_roll").value = data.id_roll : '';
-                data.group_roll ? document.getElementById("current_group").value = data.group_roll : '';
-                data.id_item ? document.getElementById("current_id_item").value = data.id_item : '';
+                data.roll_id ? document.getElementById("roll_id").value = data.roll_id : '';
+                data.item_id ? document.getElementById("item_id").value = data.item_id : '';
+                data.item_detail ? document.getElementById("item_detail").value = data.item_detail : '';
+                data.item_color ? document.getElementById("item_color").value = data.item_color : '';
+                data.roll_id ? document.getElementById("current_roll_id").value = data.roll_id : '';
+                data.group ? document.getElementById("current_group").value = data.group : '';
+                data.item_id ? document.getElementById("current_item_id").value = data.item_id : '';
                 data.lot ? document.getElementById("current_lot").value = data.lot : '';
                 data.roll ? document.getElementById("current_roll").value = data.roll : '';
                 data.qty ? document.getElementById("current_qty").value = convertedQty : '';
-                data.qty ? document.getElementById("current_qty_real").value = data.qty : '';
-                data.unit ? document.getElementById("current_unit").value = data.unit : '';
-                data.unit ? document.getElementById("current_custom_unit").value = data.unit : '';
+                data.qty ? document.getElementById("current_qty_roll").value = data.qty : '';
+                data.unit ? document.getElementById("current_unit_roll").value = data.unit : '';
+                data.unit ? document.getElementById("current_unit_roll_custom").value = data.unit : '';
                 data.unit ? document.getElementById("current_sisa_gelaran_unit").value = (data.unit != "KGM" ? "METER" : "KGM") : '';
                 data.unit ? document.getElementById("current_sambungan_unit").value = (data.unit != "KGM" ? "METER" : "KGM") : '';
                 data.sisa_gelaran ? document.getElementById("current_sisa_gelaran").value = data.sisa_gelaran : '';
                 data.sambungan ? document.getElementById("current_sambungan").value = data.sambungan : '';
                 data.est_amparan ? document.getElementById("current_est_amparan").value = data.est_amparan : '';
                 data.lembar_gelaran ? document.getElementById("current_lembar_gelaran").value = data.lembar_gelaran : '';
-                data.average_time ? document.getElementById("current_average_time").value = data.average_time : '';
+                data.waktu_average ? document.getElementById("current_waktu_average").value = data.waktu_average : '';
                 data.kepala_kain ? document.getElementById("current_kepala_kain").value = data.kepala_kain : '';
                 data.sisa_tidak_bisa ? document.getElementById("current_sisa_tidak_bisa").value = data.sisa_tidak_bisa : '';
                 data.reject ? document.getElementById("current_reject").value = data.reject : '';
@@ -2560,8 +2525,8 @@
                     // extension things
                     let estSambungan = calculateSambungan(sisaGelaran, unitSisaGelaran);
 
-                    data.id_sambungan ? document.getElementById("id_sambungan").value = data.id_sambungan : '';
-                    document.getElementById("status_sambungan").value = "extension";
+                    data.sambungan_id ? document.getElementById("sambungan_id").value = data.sambungan_id : '';
+                    document.getElementById("sambungan_status").value = "extension";
                     document.getElementById("current_sambungan").value = estSambungan;
 
                     openExtension();
@@ -2573,19 +2538,19 @@
                 } else {
                     nextProcessThreeButton.classList.add("d-none");
 
-                    if ($("status_sambungan").val() != "extension") {
+                    if ($("sambungan_status").val() != "extension") {
                         lockExtension();
                     }
                 }
 
                 // if item is not yet scanned/selected
-                if (!(data.id_item)) {
+                if (!(data.item_id)) {
                     openScanItemForm();
 
                     // scan qr
                     $('#scan-qr-card').CardWidget('expand');
                     $('#spreading-form-card').CardWidget('collapse');
-                    document.getElementById('kode_barang').focus();
+                    document.getElementById('roll_id').focus();
 
                     // time record
                     firstTimeRecordCondition();
@@ -2609,28 +2574,28 @@
 
                 lockItemSpreading();
 
-                document.getElementById("current_id_item").setAttribute("readonly", true);
+                document.getElementById("current_item_id").setAttribute("readonly", true);
                 document.getElementById("current_lot").setAttribute("readonly", true);
                 document.getElementById("current_roll").setAttribute("readonly", true);
                 document.getElementById("current_qty").setAttribute("readonly", true);
-                document.getElementById("current_qty_real").setAttribute("readonly", true);
+                document.getElementById("current_qty_roll").setAttribute("readonly", true);
 
-                document.getElementById("id_sambungan").value = "";
-                document.getElementById("status_sambungan").value = "";
+                document.getElementById("sambungan_id").value = "";
+                document.getElementById("sambungan_status").value = "";
                 document.getElementById("current_group").value = "";
-                document.getElementById("current_id_item").value = "";
+                document.getElementById("current_item_id").value = "";
                 document.getElementById("current_lot").value = "";
                 document.getElementById("current_roll").value = "";
                 document.getElementById("current_qty").value = "";
-                document.getElementById("current_qty_real").value = "";
-                document.getElementById("current_unit").value = "";
+                document.getElementById("current_qty_roll").value = "";
+                document.getElementById("current_unit_roll").value = "";
                 document.getElementById("current_sisa_gelaran").value = 0;
                 document.getElementById("current_sisa_gelaran_unit").value = "";
                 document.getElementById("current_sambungan").value = 0;
                 document.getElementById("current_sambungan_unit").value = "";
                 document.getElementById("current_est_amparan").value = 0;
                 document.getElementById("current_lembar_gelaran").value = 0;
-                document.getElementById("current_average_time").value = "00:00";
+                document.getElementById("current_waktu_average").value = "00:00";
                 document.getElementById("current_kepala_kain").value = 0;
                 document.getElementById("current_sisa_tidak_bisa").value = 0;
                 document.getElementById("current_reject").value = 0;
@@ -2669,41 +2634,41 @@
 
             // -Lock Item input on Spreading Form-
             function lockItemSpreading() {
-                document.getElementById("current_id_item").setAttribute("readonly", true);
+                document.getElementById("current_item_id").setAttribute("readonly", true);
                 document.getElementById("current_lot").setAttribute("readonly", true);
                 document.getElementById("current_roll").setAttribute("readonly", true);
                 document.getElementById("current_qty").setAttribute("readonly", true);
-                document.getElementById("current_qty_real").setAttribute("readonly", true);
+                document.getElementById("current_qty_roll").setAttribute("readonly", true);
 
-                document.getElementById("current_unit").classList.remove("d-none");
-                document.getElementById("current_custom_unit").classList.add("d-none");
+                document.getElementById("current_unit_roll").classList.remove("d-none");
+                document.getElementById("current_unit_roll_custom").classList.add("d-none");
             }
 
             // -Open Item input on Spreading Form-
             function openItemSpreading() {
-                document.getElementById("current_id_item").removeAttribute("readonly");
+                document.getElementById("current_item_id").removeAttribute("readonly");
                 document.getElementById("current_lot").removeAttribute("readonly");
                 document.getElementById("current_roll").removeAttribute("readonly");
                 document.getElementById("current_qty").removeAttribute("readonly");
-                document.getElementById("current_qty_real").removeAttribute("readonly");
+                document.getElementById("current_qty_roll").removeAttribute("readonly");
 
-                document.getElementById("current_unit").classList.add("d-none");
-                document.getElementById("current_custom_unit").classList.remove("d-none");
+                document.getElementById("current_unit_roll").classList.add("d-none");
+                document.getElementById("current_unit_roll_custom").classList.remove("d-none");
             }
 
             // -Lock Spreading Form-
             function lockSpreadingForm() {
                 document.getElementById("current_group").setAttribute("readonly", true);
-                document.getElementById("current_id_item").setAttribute("readonly", true);
+                document.getElementById("current_item_id").setAttribute("readonly", true);
                 document.getElementById("current_lot").setAttribute("readonly", true);
                 document.getElementById("current_roll").setAttribute("readonly", true);
                 document.getElementById("current_qty").setAttribute("readonly", true);
-                document.getElementById("current_unit").setAttribute("readonly", true);
+                document.getElementById("current_unit_roll").setAttribute("readonly", true);
                 document.getElementById("current_sisa_gelaran").setAttribute("readonly", true);
                 document.getElementById("current_sambungan").setAttribute("readonly", true);
                 document.getElementById("current_est_amparan").setAttribute("readonly", true);
                 document.getElementById("current_lembar_gelaran").setAttribute("readonly", true);
-                document.getElementById("current_average_time").setAttribute("readonly", true);
+                document.getElementById("current_waktu_average").setAttribute("readonly", true);
                 document.getElementById("current_kepala_kain").setAttribute("readonly", true);
                 document.getElementById("current_sisa_tidak_bisa").setAttribute("readonly", true);
                 document.getElementById("current_reject").setAttribute("readonly", true);
@@ -2788,7 +2753,7 @@
                             // store to input text
                             let breakDecodedText = decodedText.split('-');
 
-                            document.getElementById('kode_barang').value = breakDecodedText[0];
+                            document.getElementById('roll_id').value = breakDecodedText[0];
 
                             getScannedItem(breakDecodedText[0]);
 
@@ -2806,7 +2771,7 @@
                         //     // store to input text
                         //     let breakDecodedText = decodedText.split('-');
 
-                        //     document.getElementById('kode_barang').value = breakDecodedText[0];
+                        //     document.getElementById('roll_id').value = breakDecodedText[0];
 
                         //     getScannedItem(breakDecodedText[0]);
 
@@ -2851,16 +2816,16 @@
 
             // --Clear Scan Item Form--
             function clearScanItemForm() {
-                $("#kode_barang").val("");
-                $("#id_item").val("");
-                $("#detail_item").val("");
-                $("#color_act").val("");
+                $("#roll_id").val("");
+                $("#item_id").val("");
+                $("#item_detail").val("");
+                $("#item_color").val("");
             }
 
             // --Lock Scan Item Form then Clear Scanner--
             function lockScanItemForm() {
-                document.getElementById("kode_barang").setAttribute("readonly", true);
-                document.getElementById("color_act").setAttribute("disabled", true);
+                document.getElementById("roll_id").setAttribute("readonly", true);
+                document.getElementById("item_color").setAttribute("disabled", true);
                 document.getElementById("get-button").setAttribute("disabled", true);
                 document.getElementById("scan-button").setAttribute("disabled", true);
                 document.getElementById("switch-method").setAttribute("disabled", true);
@@ -2871,10 +2836,10 @@
 
             // --Open Scan Item Form then Open Scanner--
             function openScanItemForm() {
-                if (status != "SELESAI PENGERJAAN") {
+                if (statusForm != "finish") {
 
-                    document.getElementById("kode_barang").removeAttribute("readonly");
-                    document.getElementById("color_act").removeAttribute("disabled");
+                    document.getElementById("roll_id").removeAttribute("readonly");
+                    document.getElementById("item_color").removeAttribute("disabled");
                     document.getElementById("get-button").removeAttribute("disabled");
                     document.getElementById("scan-button").removeAttribute("disabled");
                     document.getElementById("switch-method").removeAttribute("disabled");
@@ -2910,16 +2875,16 @@
         // Function List :
             // -Fetch Scanned Item Data-
             function fetchScan() {
-                let kodeBarang = document.getElementById('kode_barang').value;
+                let kodeBarang = document.getElementById('roll_id').value;
 
                 getScannedItem(kodeBarang);
             }
 
             // -Get Scanned Item Data-
             function getScannedItem(id) {
-                document.getElementById("id_item").value = "";
-                document.getElementById("detail_item").value = "";
-                document.getElementById("color_act").value = "";
+                document.getElementById("item_id").value = "";
+                document.getElementById("item_detail").value = "";
+                document.getElementById("item_color").value = "";
 
                 if (isNotNull(id)) {
                     return $.ajax({
@@ -2941,19 +2906,19 @@
                                     // } else {
                                     //     currentScannedItem = res;
 
-                                    //     document.getElementById("id_item").value = res.id_item;
-                                    //     document.getElementById("detail_item").value = res.detail_item;
+                                    //     document.getElementById("item_id").value = res.item_id;
+                                    //     document.getElementById("item_detail").value = res.item_detail;
                                     // }
 
                                     currentScannedItem = res;
 
-                                    document.getElementById("id_item").value = res.id_item;
-                                    document.getElementById("detail_item").value = res.detail_item;
+                                    document.getElementById("item_id").value = res.item_id;
+                                    document.getElementById("item_detail").value = res.item_detail;
                                 } else {
                                     currentScannedItem = res;
 
-                                    document.getElementById("id_item").value = res.id_item;
-                                    document.getElementById("detail_item").value = res.detail_item;
+                                    document.getElementById("item_id").value = res.item_id;
+                                    document.getElementById("item_detail").value = res.item_detail;
                                 }
                             } else {
                                 Swal.fire({
@@ -3010,10 +2975,10 @@
                 let td21 = document.createElement('td');
                 let td22 = document.createElement('td');
                 td1.innerHTML = (latestStatus != 'extension complete' ? totalScannedItem + 1 : "");
-                td2.innerHTML = data.group_roll ? data.group_roll : '-';
-                td3.innerHTML = data.group_stocker ? data.group_stocker : '-';
-                td4.innerHTML = data.id_roll ? data.id_roll : '-';
-                td5.innerHTML = data.id_item ? data.id_item : '-';
+                td2.innerHTML = data.group ? data.group : '-';
+                td3.innerHTML = data.stocker_group ? data.stocker_group : '-';
+                td4.innerHTML = data.roll_id ? data.roll_id : '-';
+                td5.innerHTML = data.item_id ? data.item_id : '-';
                 td6.innerHTML = data.lot ? data.lot : '-';
                 td7.innerHTML = data.roll ? data.roll : '-';
                 td8.innerHTML = data.qty ? data.qty : '-';
@@ -3022,7 +2987,7 @@
                 td11.innerHTML = data.sambungan ? data.sambungan : '-';
                 td12.innerHTML = data.est_amparan ? data.est_amparan : '-';
                 td13.innerHTML = data.lembar_gelaran ? data.lembar_gelaran : '';
-                td14.innerHTML = data.average_time ? data.average_time : '-';
+                td14.innerHTML = data.waktu_average ? data.waktu_average : '-';
                 td15.innerHTML = data.kepala_kain ? data.kepala_kain : '-';
                 td16.innerHTML = data.sisa_tidak_bisa ? data.sisa_tidak_bisa : '-';
                 td17.innerHTML = data.reject ? data.reject : '-';
@@ -3062,7 +3027,7 @@
                 totalSisaGelaran += Number(data.sisa_gelaran);
                 totalSambungan += Number(data.sambungan);
                 totalEstAmparan += Number(data.est_amparan);
-                totalAverageTime += (Number(data.average_time.slice(0, 2)) * 60) + Number(data.average_time.slice(3, 5));
+                totalAverageTime += (Number(data.waktu_average.slice(0, 2)) * 60) + Number(data.waktu_average.slice(3, 5));
                 totalKepalaKain += Number(data.kepala_kain);
                 totalSisaTidakBisa += Number(data.sisa_tidak_bisa);
                 totalReject += Number(data.reject);
@@ -3150,7 +3115,7 @@
                         averageSeconds = (parseFloat(summarySeconds) / parseFloat(lap)).round(0);
 
                         $("#current_lembar_gelaran").val(lap).trigger('change');
-                        $("#current_average_time").val((pad(parseInt(averageSeconds / 60))) + ':' + (pad(averageSeconds % 60)))
+                        $("#current_waktu_average").val((pad(parseInt(averageSeconds / 60))) + ':' + (pad(averageSeconds % 60)))
                     }
 
                     let tr = document.createElement('tr');
@@ -3183,7 +3148,7 @@
             // -Start Time Record-
             function startTimeRecord() {
                 if (lostInterval) {
-                    addNewLostTime();
+                    addNewLossTime();
                 }
 
                 timeRecordInterval = setInterval(setTime, 999);
@@ -3193,14 +3158,14 @@
 
                 openLapTimeRecordCondition();
 
-                if ($("#status_sambungan").val() != "extension") {
+                if ($("#sambungan_status").val() != "extension") {
                     storeThisTimeRecord();
                 }
             }
 
             // -Next Lap Time Record-
             async function addNewTimeRecord(data = null) {
-                if ($("#status_sambungan").val() == "extension") {
+                if ($("#sambungan_status").val() == "extension") {
                     pauseTimeRecordButtons();
 
                     summarySeconds += totalSeconds;
@@ -3210,7 +3175,7 @@
                     averageSeconds = (parseFloat(summarySeconds) / parseFloat(lap)).round(0);
 
                     $("#current_lembar_gelaran").val(lap).trigger('change');
-                    $("#current_average_time").val((pad(parseInt(averageSeconds / 60))) + ':' + (pad(averageSeconds % 60)))
+                    $("#current_waktu_average").val((pad(parseInt(averageSeconds / 60))) + ':' + (pad(averageSeconds % 60)))
 
                     let tr = document.createElement('tr');
                     let td1 = document.createElement('td');
@@ -3241,7 +3206,7 @@
                     averageSeconds = (parseFloat(summarySeconds) / parseFloat(lap)).round(0);
 
                     $("#current_lembar_gelaran").val(lap).trigger('change');
-                    $("#current_average_time").val((pad(parseInt(averageSeconds / 60))) + ':' + (pad(averageSeconds % 60)))
+                    $("#current_waktu_average").val((pad(parseInt(averageSeconds / 60))) + ':' + (pad(averageSeconds % 60)))
 
                     let tr = document.createElement('tr');
                     let td1 = document.createElement('td');
@@ -3386,16 +3351,16 @@
         // Lost Time Module :
             // Variable List :
                 // Button Elements
-                var startLostButton = document.getElementById("startLostButton");
-                var nextLostButton = document.getElementById("nextLostButton");
+                var startLossButton = document.getElementById("startLossButton");
+                var nextLossButton = document.getElementById("nextLossButton");
 
                 // Time Elements
                 var lostMinutes = document.getElementById("lostMinutes");
                 var lostSeconds = document.getElementById("lostSeconds");
 
                 // Table Elements
-                var lostTimeTable = document.getElementById('lostTimeTable');
-                var lostTimeTableTbody = lostTimeTable.getElementsByTagName("tbody")[0];
+                var lossTimeTable = document.getElementById('lossTimeTable');
+                var lossTimeTableTbody = lossTimeTable.getElementsByTagName("tbody")[0];
 
                 // Calculate Things
                 var lostTime = 0;
@@ -3413,9 +3378,9 @@
 
             // Function List :
                 // -Time Record-
-                function checkLostTime(id) {
+                function checkLostTime(noForm) {
                     $.ajax({
-                        url: '{{ route('check-lost-form-cut-input') }}/' + id,
+                        url: '{{ route('check-lost-form-cut-input') }}/' + noForm,
                         type: 'get',
                         dataType: 'json',
                         success: function(res) {
@@ -3443,17 +3408,15 @@
                         td1.innerHTML = lostTime;
                         td2.innerHTML = element.waktu;
                         td3.classList.add('d-none');
-                        td3.innerHTML = `<input type='hidden' name="lost_time[` + lostTime +
-                            `]" value="` + element
-                            .waktu + `" />`;
+                        td3.innerHTML = `<input type='hidden' name="lost_time[` + lostTime + `]" value="` + element.waktu + `" />`;
                         tr.appendChild(td1);
                         tr.appendChild(td2);
                         tr.appendChild(td3);
 
-                        lostTimeTableTbody.prepend(tr);
+                        lossTimeTableTbody.prepend(tr);
                     });
 
-                    document.getElementById("current_lost_time").value = lostTime;
+                    document.getElementById("current_loss_time").value = lostTime;
                 }
 
                 // -Set Time-
@@ -3464,7 +3427,7 @@
                 }
 
                 // -Start Time Record-
-                function startLostTime() {
+                function startLossTime() {
                     pausedTimeRecord = false;
 
                     if (timeRecordInterval) {
@@ -3477,21 +3440,21 @@
 
                     lostInterval = setInterval(setTimeLost, 999);
 
-                    startLostButton.classList.add("d-none")
-                    nextLostButton.classList.remove('d-none');
-                    nextLostButton.focus();
+                    startLossButton.classList.add("d-none")
+                    nextLossButton.classList.remove('d-none');
+                    nextLossButton.focus();
 
                     openLostTimeCondition();
                 }
 
                 // -Next Lap Time Record-
-                async function addNewLostTime() {
+                async function addNewLossTime() {
                     pauseLostTimeButtons();
 
                     totalLostSeconds = 0;
                     lostTime++;
 
-                    document.getElementById("current_lost_time").value = lostTime;
+                    document.getElementById("current_loss_time").value = lostTime;
 
                     let tr = document.createElement('tr');
                     let td1 = document.createElement('td');
@@ -3507,13 +3470,13 @@
                     tr.appendChild(td2);
                     tr.appendChild(td3);
 
-                    lostTimeTableTbody.prepend(tr);
+                    lossTimeTableTbody.prepend(tr);
 
                     console.log(lostTime);
 
                     stopLostTime();
 
-                    $('#lost-time-card').CardWidget('collapse');
+                    $('#loss-time-card').CardWidget('collapse');
                 }
 
                 // -Stop Time Record-
@@ -3532,25 +3495,25 @@
                     lostSeconds.value = "00";
                     lostMinutes.value = "00";
 
-                    startLostButton.classList.remove('d-none');
-                    nextLostButton.classList.add('d-none');
+                    startLossButton.classList.remove('d-none');
+                    nextLossButton.classList.add('d-none');
 
                     storeLostTime(id);
                 }
 
                 // Pause Buttons
                 function pauseLostTimeButtons(disables = []) {
-                    startLostButton.disabled = true;
-                    nextLostButton.disabled = true;
+                    startLossButton.disabled = true;
+                    nextLossButton.disabled = true;
                     setTimeout(function() {
-                        startLostButton.disabled = false;
-                        nextLostButton.disabled = false;
+                        startLossButton.disabled = false;
+                        nextLossButton.disabled = false;
                     }, 1500);
                 }
 
                 // Store Lost Time
                 function storeLostTime(id) {
-                    let lostTimeForm = new FormData(document.getElementById('lost-time-form'));
+                    let lostTimeForm = new FormData(document.getElementById('loss-time-form'));
 
                     $.ajax({
                         url: '{{ route('store-lost-form-cut-input') }}/' + id,
@@ -3568,23 +3531,23 @@
 
                 // Conditions :
                 function firstLostTimeCondition() {
-                    startLostButton.disabled = true;
-                    nextLostButton.disabled = true;
+                    startLossButton.disabled = true;
+                    nextLossButton.disabled = true;
                 }
 
                 function openLostTimeCondition() {
-                    startLostButton.disabled = false;
-                    nextLostButton.disabled = true;
+                    startLossButton.disabled = false;
+                    nextLossButton.disabled = true;
                 }
 
                 function openLapLostTimeCondition() {
-                    startLostButton.disabled = true;
-                    nextLostButton.disabled = false;
+                    startLossButton.disabled = true;
+                    nextLossButton.disabled = false;
                 }
 
                 function nextLostTimeCondition() {
-                    startLostButton.disabled = true;
-                    nextLostButton.disabled = true;
+                    startLossButton.disabled = true;
+                    nextLossButton.disabled = true;
                 }
     </script>
 @endsection
