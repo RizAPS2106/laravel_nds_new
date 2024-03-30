@@ -55,12 +55,12 @@
                                     <th>No. Form</th>
                                     <th>No. Meja</th>
                                     <th>No. Marker</th>
-                                    <th>No. WS</th>
+                                    <th>Size Ratio</th>
+                                    <th>Qty Ply</th>
                                     <th>Style</th>
                                     <th>Color</th>
                                     <th>Panel</th>
-                                    <th>Size Ratio</th>
-                                    <th>Qty Ply</th>
+                                    <th>No. WS</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -152,7 +152,7 @@
 
         $('#datatable-select thead tr').clone(true).appendTo('#datatable-select thead');
         $('#datatable-select thead tr:eq(1) th').each(function(i) {
-            if (i != 8) {
+            if (i != 4) {
                 var title = $(this).text();
                 $(this).html('<input type="text" class="form-control form-control-sm" />');
 
@@ -193,7 +193,10 @@
                     data: 'marker_input_kode'
                 },
                 {
-                    data: 'act_costing_ws'
+                    data: 'marker_details'
+                },
+                {
+                    data: 'qty_ply'
                 },
                 {
                     data: 'style'
@@ -205,22 +208,32 @@
                     data: 'panel'
                 },
                 {
-                    data: 'marker_details'
-                },
-                {
-                    data: 'qty_ply'
+                    data: 'act_costing_ws'
                 },
             ],
             columnDefs: [
                 {
-                    targets: [2],
+                    targets: [4],
                     render: (data, type, row, meta) => {
+                        let color = "";
 
-                        return data ? data.toUpperCase() : "-";
+                        if (row.status_form == 'finish') {
+                            color = '#087521';
+                        } else if (row.status_form == 'marker') {
+                            color = '#2243d6';
+                        } else if (row.status_form == 'form') {
+                            color = '#2243d6';
+                        } else if (row.status_form == 'form detail') {
+                            color = '#2243d6';
+                        } else if (row.status_form == 'form spreading') {
+                            color = '#2243d6';
+                        }
+
+                        return  "<span style='color: "+ color + "' >" + (data ? data.replace(/,/g, '<br>') : '-') + "</span>"
                     }
                 },
                 {
-                    targets: [0,1,2,3,4],
+                    targets: [0,1,2,3,5,6,7,8],
                     className: "text-nowrap"
                 },
             ],
@@ -396,7 +409,10 @@
                     data: 'marker_input_kode'
                 },
                 {
-                    data: 'act_costing_ws'
+                    data: 'marker_details'
+                },
+                {
+                    data: 'qty_ply'
                 },
                 {
                     data: 'style'
@@ -408,79 +424,34 @@
                     data: 'panel'
                 },
                 {
-                    data: 'status_form'
-                },
-                {
-                    data: 'marker_details'
-                },
-                {
-                    data: 'qty_ply'
+                    data: 'act_costing_ws'
                 },
             ],
             columnDefs: [
                 {
-                    targets: [2],
+                    targets: [4],
                     render: (data, type, row, meta) => {
                         let color = "";
 
-                        if (row.status == 'SELESAI PENGERJAAN') {
+                        if (row.status_form == 'finish') {
                             color = '#087521';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING') {
+                        } else if (row.status_form == 'marker') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING DETAIL') {
+                        } else if (row.status_form == 'form') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING SPREAD') {
+                        } else if (row.status_form == 'form detail') {
+                            color = '#2243d6';
+                        } else if (row.status_form == 'form spreading') {
                             color = '#2243d6';
                         }
 
-                        return data ? "<span style='color: " + color + "' >" + data.toUpperCase() + "</span>" : "<span style=' color: " + color + "'>-</span>"
+                        return  "<span style='color: "+ color + "' >" + (data ? data.replace(/,/g, '<br>') : '-') + "</span>"
                     }
                 },
                 {
-                    targets: [8],
-                    className: "text-center align-middle",
-                    render: (data, type, row, meta) => {
-                        icon = "";
-
-                        switch (data) {
-                            case "idle":
-                                icon = `<i class="fas fa-file fa-lg"></i>`;
-                                break;
-                            case "form":
-                            case "form detail":
-                            case "form spreading":
-                                icon = `<i class="fas fa-sync-alt fa-spin fa-lg" style="color: #2243d6;"></i>`;
-                                break;
-                            case "finish":
-                                icon = `<i class="fas fa-check fa-lg" style="color: #087521;"></i>`;
-                                break;
-                        }
-
-                        return icon;
-                    }
-                },
-                {
-                    targets: [0,1,2,3,4],
+                    targets: [0,1,2,3,5,6,7,8],
                     className: "text-nowrap"
                 },
-                {
-                    targets: '_all',
-                    render: (data, type, row, meta) => {
-                        let color = "";
-
-                        if (row.status == 'finish') {
-                            color = '#087521';
-                        } else if (row.status == 'form') {
-                            color = '#2243d6';
-                        } else if (row.status == 'form detail') {
-                            color = '#2243d6';
-                        } else if (row.status == 'form spreading') {
-                            color = '#2243d6';
-                        }
-
-                        return data ? "<span style='color: " + color + "' >" + data + "</span>" : "<span style=' color: " + color + "'>-</span>"
-                    }
-                }
             ],
             rowCallback: function( row, data, index ) {
                 if (data['tipe_form_cut'] == 'manual') {

@@ -60,7 +60,7 @@ class CutPlanController extends Controller
             toJson();
         }
 
-        return view('cut-plan.cut-plan', ["page" => "dashboard-cutting", "subPageGroup" => "cuttingplan-cutting", "subPage" => "cut-plan"]);
+        return view('cutting.cut-plan.cut-plan', ["page" => "dashboard-cutting", "subPageGroup" => "cuttingplan-cutting", "subPage" => "cut-plan"]);
     }
 
     /**
@@ -119,7 +119,7 @@ class CutPlanController extends Controller
                     b.style,
                     b.color,
                     b.panel,
-                    users.name meja,
+                    UPPER(users.name) meja,
                     b.panjang_marker,
                     UPPER(b.unit_panjang_marker) unit_panjang_marker,
                     b.comma_marker,
@@ -153,7 +153,7 @@ class CutPlanController extends Controller
             return DataTables::of($spreadingForms)->toJson();
         }
 
-        return view('cut-plan.create-cut-plan', ["page" => "dashboard-cutting", "subPageGroup" => "cuttingplan-cutting", "subPage" => "cut-plan"]);
+        return view('cutting.cut-plan.create-cut-plan', ["page" => "dashboard-cutting", "subPageGroup" => "cuttingplan-cutting", "subPage" => "cut-plan"]);
     }
 
     public function getSelectedForm(Request $request, $noCutPlan = 0)

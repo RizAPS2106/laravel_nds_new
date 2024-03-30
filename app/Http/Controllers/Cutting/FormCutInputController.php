@@ -382,7 +382,7 @@ class FormCutInputController extends Controller
                 ac.styleno,
                 jd.id_jo,
                 ac.kpno,
-                mi.id_item,
+                mi.id_item item_id,
                 mi.itemdesc
             from
                 jo_det jd
@@ -547,6 +547,7 @@ class FormCutInputController extends Controller
 
         // Store Form Cut Detail Data
             $storeFormCutInputDetail = FormCutInputDetail::selectRaw("form_cut_input_detail.*")->
+                where('form_cut_input_detail.status', 'not complete')->
                 updateOrCreate(
                     [
                         "no_form" => $validatedRequest['no_form']
@@ -606,11 +607,11 @@ class FormCutInputController extends Controller
                     if ($status == 'need extension') {
                         // Store Form Cut Detail Extension
                             $storeFormCutInputDetailExt = FormCutInputDetail::create([
-                                "id_sambungan" => $storeFormCutInputDetail->id,
+                                "sambungan_id" => $storeFormCutInputDetail->id,
                                 "no_form" => $validatedRequest['no_form'],
                                 "group" => $validatedRequest['current_group'],
                                 "status" => "extension",
-                                "group_stocker" => $groupStocker
+                                "stocker_group" => $stockerGroup
                             ]);
 
                             if ($storeFormCutInputDetailExt) {
@@ -755,7 +756,7 @@ class FormCutInputController extends Controller
         ]);
 
         // Check Form Cut Detail Before for Stocker Grouping
-            $formCutBefore = FormCutInputDetail::select('grooup', 'stocker_group')->where('no_form', $validatedRequest['no_form'])->whereRaw('(form_cut_input_detail.status = "complete" || form_cut_input_detail.status = "need extension" || form_cut_input_detail.status = "extension complete")')->orderBy('id', 'desc')->first();
+            $formCutBefore = FormCutInputDetail::select('group', 'stocker_group')->where('no_form', $validatedRequest['no_form'])->whereRaw('(form_cut_input_detail.status = "complete" || form_cut_input_detail.status = "need extension" || form_cut_input_detail.status = "extension complete")')->orderBy('id', 'desc')->first();
             $stockerGroup = $formCutBefore ? ($formCutBefore->group == $validatedRequest['current_group'] ? $formCutBefore->stocker_group : $formCutBefore->stocker_group + 1) : 1;
 
         // Form Cut Detail Item Qty
@@ -764,12 +765,10 @@ class FormCutInputController extends Controller
 
         // Store Form Cut Detail Data
             $storeFormCutInputDetail = FormCutInputDetail::selectRaw("form_cut_input_detail.*")->
-                leftJoin('form_cut_input', 'form_cut_input.no_form', '=', 'form_cut_input_detail.no_form')->
-                where('form_cut_input.meja_id', $validatedRequest['meja_id'])->
-                where('form_cut_input_detail.status', 'extension')->
+                where('status', 'extension')->
                 updateOrCreate(
                     [
-                        'form_cut_input_detail.no_form' => $validatedRequest['no_form']
+                        'no_form' => $validatedRequest['no_form']
                     ],
                     [
                         "roll_id" => $validatedRequest['current_roll_id'],
@@ -785,7 +784,7 @@ class FormCutInputController extends Controller
                         "sambungan" => $validatedRequest['current_sambungan'],
                         "est_amparan" => $validatedRequest['current_est_amparan'],
                         "lembar_gelaran" => $validatedRequest['current_lembar_gelaran'],
-                        "average_waktu" => $validatedRequest['current_waktu_average'],
+                        "waktu_average" => $validatedRequest['current_waktu_average'],
                         "kepala_kain" => $validatedRequest['current_kepala_kain'],
                         "sisa_tidak_bisa" => $validatedRequest['current_sisa_tidak_bisa'],
                         "reject" => $validatedRequest['current_reject'],
@@ -813,7 +812,7 @@ class FormCutInputController extends Controller
                             "item_id" => $validatedRequest['current_item_id']
                         ],
                         [
-                            "item_detail" => $validatedRequest['detail_item'],
+                            "item_detail" => $validatedRequest['item_detail'],
                             "item_color" => $validatedRequest['item_color'],
                             "lot" => $request['current_lot'],
                             "roll" => $validatedRequest['current_roll'],
@@ -823,49 +822,47 @@ class FormCutInputController extends Controller
                     );
 
                 // When Time Record Lap Added
-                    if ($lap > 0) {
-                        // Save Time Record Lap
-                            $storeTimeRecordLap = FormCutInputDetailLap::updateOrCreate(
-                                [
-                                    "form_cut_input_detail_id" => $storeFormCutInputDetail->id,
-                                    "lembar_gelaran_ke" => $lap
-                                ],
-                                [
-                                    "waktu" => $request["time_record"][$lap]
-                                ]
-                            );
+                    // Save Time Record Lap
+                        $storeTimeRecordLap = FormCutInputDetailLap::updateOrCreate(
+                            [
+                                "form_cut_input_detail_id" => $storeFormCutInputDetail->id,
+                                "lembar_gelaran_ke" => 1
+                            ],
+                            [
+                                "waktu" => $request["time_record"][1]
+                            ]
+                        );
 
-                        // When Save Time Record Lap Success
-                            if ($storeTimeRecordLap) {
-                                // Store Form Cut Detail Next After Extension
-                                    $storeFormCutInputDetailNext = FormCutInputDetail::create([
-                                        "no_form" => $validatedRequest['no_form'],
-                                        "roll_id" => $validatedRequest['current_roll_id'],
-                                        "item_id" => $validatedRequest['current_item_id'],
-                                        "item_color" => $validatedRequest['item_color'],
-                                        "item_detail" => $validatedRequest['detail_item'],
-                                        "group" => $validatedRequest['current_group'],
-                                        "lot" => $request['current_lot'],
-                                        "roll" => $validatedRequest['current_roll'],
-                                        "qty" => $itemRemain,
-                                        "unit" => $itemUnit,
-                                        "sambungan" => 0,
-                                        "status" => "not complete",
-                                        "metode" => $request->metode ? $request->metode : ($validatedRequest['current_roll_id'] ? "scan" : "select"),
-                                    ]);
+                    // When Save Time Record Lap Success
+                        if ($storeTimeRecordLap) {
+                            // Store Form Cut Detail Next After Extension
+                                $storeFormCutInputDetailNext = FormCutInputDetail::create([
+                                    "no_form" => $validatedRequest['no_form'],
+                                    "roll_id" => $validatedRequest['current_roll_id'],
+                                    "item_id" => $validatedRequest['current_item_id'],
+                                    "item_color" => $validatedRequest['item_color'],
+                                    "item_detail" => $validatedRequest['item_detail'],
+                                    "group" => $validatedRequest['current_group'],
+                                    "lot" => $request['current_lot'],
+                                    "roll" => $validatedRequest['current_roll'],
+                                    "qty" => $itemRemain,
+                                    "unit" => $itemUnit,
+                                    "sambungan" => 0,
+                                    "status" => "not complete",
+                                    "metode" => $request->metode ? $request->metode : ($validatedRequest['current_roll_id'] ? "scan" : "select"),
+                                ]);
 
-                                    if ($storeFormCutInputDetailNext) {
-                                        return array(
-                                            "status" => 200,
-                                            "message" => "alright",
-                                            "additional" => [
-                                                $storeFormCutInputDetail,
-                                                $storeFormCutInputDetailNext,
-                                            ],
-                                        );
-                                    }
-                            }
-                    }
+                                if ($storeFormCutInputDetailNext) {
+                                    return array(
+                                        "status" => 200,
+                                        "message" => "alright",
+                                        "additional" => [
+                                            $storeFormCutInputDetail,
+                                            $storeFormCutInputDetailNext,
+                                        ],
+                                    );
+                                }
+                        }
 
                 return array(
                     "status" => 200,
@@ -970,19 +967,19 @@ class FormCutInputController extends Controller
                 where("marker_input.act_costing_ws", $formCutInputData->marker->act_costing_ws)->
                 where("marker_input.color", $formCutInputData->marker->color)->
                 where("marker_input.panel", $formCutInputData->marker->panel)->
-                where("form_cut_input.status", "finish")->
+                where("form_cut_input.status_form", "finish")->
                 count();
 
         // Finish Form Cut Process
             $updateFormCutInput = FormCutInput::where("id", $id)->update([
-                "status" => "finish",
+                "status_form" => "finish",
+                "no_cut_form" => $formCutInputSimilarCount + 1,
                 "waktu_selesai" => $request->finishTime,
                 "cons_act" => $request->consAct,
                 "unit_cons_act" => $request->unitConsAct,
                 "cons_act_nosr" => $request->consActNoSr,
                 "unit_cons_act_nosr" => $request->unitConsActNoSr,
                 "total_ply" => $request->totalPly,
-                "no_cut" => $formCutInputSimilarCount + 1,
                 "cons_ws_uprate" => $request->consWsUprate,
                 "cons_marker_uprate" => $request->consMarkerUprate,
                 "cons_ws_uprate_nosr" => $request->consWsUprateNoSr,
@@ -998,7 +995,7 @@ class FormCutInputController extends Controller
             }
 
         // Get Similar Part
-            $partData = Part::select('part.id')->
+            $partData = Part::select('id', 'kode')->
                 where("act_costing_id", $formCutInputData->marker->act_costing_id)->
                 where("act_costing_ws", $formCutInputData->marker->act_costing_ws)->
                 where("panel", $formCutInputData->marker->panel)->
@@ -1050,7 +1047,7 @@ class FormCutInputController extends Controller
                     ]);
 
                 if ($updateFormCut) {
-                    array_push($updatedForm, ["ws_no_form" => $markerGroup->act_costing_ws."-".$markerGroup->color."-".$markerGroup->panel."-".$formCut->no_form."-".$formCut->status."-".$i]);
+                    array_push($updatedForm, ["ws_no_form" => $markerGroup->act_costing_ws."-".$markerGroup->color."-".$markerGroup->panel."-".$formCut->no_form."-".$formCut->status_form."-".$i]);
                 }
             }
         }

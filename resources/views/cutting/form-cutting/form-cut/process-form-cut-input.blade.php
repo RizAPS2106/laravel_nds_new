@@ -826,6 +826,7 @@
                 </div>
             </div>
         </div>
+
         {{-- Loss Time --}}
         <div class="col-md-12">
             <div class="card card-sb collapsed-card d-none" id="loss-time-card">
@@ -874,7 +875,8 @@
                 </div>
             </div>
         </div>
-        {{-- Summary Roll --}}
+
+        {{-- Rolls --}}
         <div class="col-md-12">
             <div class="card card-sb d-none" id="summary-card">
                 <div class="card-header">
@@ -1021,6 +1023,8 @@
                 </div>
             </div>
         </div>
+
+        {{-- Finish --}}
         <div class="col-md-12">
             <button class="btn btn-block btn-sb d-none" id="finish-process" onclick="finishProcess()">SELESAI PENGERJAAN</button>
         </div>
@@ -1107,6 +1111,12 @@
                 // -On Scan Card Expand-
                 $('#scan-qr-card').on('expanded.lte.cardwidget', function(e) {
                     refreshScan();
+                });
+
+                // -On Custom Unit Change-
+                $('#current_unit_roll_custom').on('change', function(e) {
+                    console.log("testing");
+                    $('#current_unit').val(this.value);
                 });
 
                 // -Default Method-
@@ -2482,10 +2492,10 @@
                 data.item_detail ? document.getElementById("item_detail").value = data.item_detail : '';
                 data.item_color ? document.getElementById("item_color").value = data.item_color : '';
                 data.roll_id ? document.getElementById("current_roll_id").value = data.roll_id : '';
-                data.group ? document.getElementById("current_group").value = data.group : '';
                 data.item_id ? document.getElementById("current_item_id").value = data.item_id : '';
-                data.lot ? document.getElementById("current_lot").value = data.lot : '';
                 data.roll ? document.getElementById("current_roll").value = data.roll : '';
+                data.group ? document.getElementById("current_group").value = data.group : '';
+                data.lot ? document.getElementById("current_lot").value = data.lot : '';
                 data.qty ? document.getElementById("current_qty").value = convertedQty : '';
                 data.qty ? document.getElementById("current_qty_roll").value = data.qty : '';
                 data.unit ? document.getElementById("current_unit_roll").value = data.unit : '';

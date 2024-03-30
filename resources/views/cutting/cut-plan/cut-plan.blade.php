@@ -23,15 +23,15 @@
                                         <th>No. Form</th>
                                         <th>No. Meja</th>
                                         <th>No. Marker</th>
-                                        <th>No. WS</th>
-                                        <th>Style</th>
-                                        <th>Color</th>
-                                        <th>Panel</th>
-                                        <th class="align-bottom">Status</th>
                                         <th>Size Ratio</th>
                                         <th>Qty Ply</th>
                                         <th>Qty Output</th>
                                         <th>Qty Actual</th>
+                                        <th>Color</th>
+                                        <th>Panel</th>
+                                        <th>Style</th>
+                                        <th>No. WS</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -50,7 +50,7 @@
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-sb text-light">
-                    <h1 class="modal-title fs-5" id="manageCutPlanModalLabel">Atur Form Cut</h1>
+                    <h1 class="modal-title fs-5" id="manageCutPlanModalLabel"><i class="fa fa-cog fa-sm"></i> Atur Form Cut</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -114,8 +114,8 @@
                             </table>
                         </div>
                         <div class="my-3">
-                            <button type="button" class="btn btn-success btn-block fw-bold mb-3" onclick="submitManageForm();">SIMPAN</button>
-                            <button type="button" class="btn btn-no btn-block fw-bold mb-3" data-bs-dismiss="modal">BATAL</button>
+                            <button type="button" class="btn btn-success btn-block fw-bold mb-3" onclick="submitManageForm();"><i class="fa fa-save fa-sm"></i> SIMPAN</button>
+                            <button type="button" class="btn btn-no btn-block fw-bold mb-3" data-bs-dismiss="modal"><i class="fa fa-times fa-sm"></i> BATAL</button>
                         </div>
                     </form>
                 </div>
@@ -253,7 +253,7 @@
         // Cutting Plan Form Header Column Form
         $('#datatable-form thead tr').clone(true).appendTo('#datatable-form thead');
         $('#datatable-form thead tr:eq(1) th').each(function(i) {
-            if (i != 8) {
+            if (i != 4) {
                 var title = $(this).text();
                 $(this).html('<input type="text" class="form-control form-control-sm" />');
 
@@ -295,21 +295,6 @@
                     data: 'marker_input_kode'
                 },
                 {
-                    data: 'act_costing_ws'
-                },
-                {
-                    data: 'style'
-                },
-                {
-                    data: 'color'
-                },
-                {
-                    data: 'panel'
-                },
-                {
-                    data: 'status_form'
-                },
-                {
                     data: 'marker_details'
                 },
                 {
@@ -320,6 +305,21 @@
                 },
                 {
                     data: 'qty_act'
+                },
+                {
+                    data: 'color'
+                },
+                {
+                    data: 'panel'
+                },
+                {
+                    data: 'style'
+                },
+                {
+                    data: 'act_costing_ws'
+                },
+                {
+                    data: 'status_form'
                 },
             ],
             columnDefs: [
@@ -342,8 +342,39 @@
                     }
                 },
                 {
-                    targets: [8],
-                    className: "text-center align-middle",
+                    targets: [4],
+                    render: (data, type, row, meta) => {
+                        let color = "";
+
+                        if (row.status_form == 'finish') {
+                            color = '#087521';
+                        } else if (row.status_form == 'marker') {
+                            color = '#2243d6';
+                        } else if (row.status_form == 'form') {
+                            color = '#2243d6';
+                        } else if (row.status_form == 'form detail') {
+                            color = '#2243d6';
+                        } else if (row.status_form == 'form spreading') {
+                            color = '#2243d6';
+                        }
+
+                        return  "<span style='color: "+ color + "' >" + (data ? data.replace(/,/g, '<br>') : '-') + "</span>"
+                    }
+                },
+                {
+                    targets: [5],
+                    render: (data, type, row, meta) => {
+                        return `
+                            <div class="progress border border-sb position-relative" style="min-width: 50px;height: 21px">
+                                <p class="position-absolute" style="top: 50%;left: 50%;transform: translate(-50%, -50%);">`+row.total_ply+`/`+row.qty_ply+`</p>
+                                <div class="progress-bar" style="background-color: #75baeb;width: `+((row.total_ply/row.qty_ply)*100)+`%" role="progressbar"></div>
+                            </div>
+                        `;
+                    }
+                },
+                {
+                    targets: [12],
+                    className: "text-center",
                     render: (data, type, row, meta) => {
                         icon = "";
 
@@ -366,18 +397,7 @@
                     }
                 },
                 {
-                    targets: [10],
-                    render: (data, type, row, meta) => {
-                        return `
-                            <div class="progress border border-sb position-relative" style="min-width: 50px;height: 21px">
-                                <p class="position-absolute" style="top: 50%;left: 50%;transform: translate(-50%, -50%);">`+row.total_ply+`/`+row.qty_ply+`</p>
-                                <div class="progress-bar" style="background-color: #75baeb;width: `+((row.total_ply/row.qty_ply)*100)+`%" role="progressbar"></div>
-                            </div>
-                        `;
-                    }
-                },
-                {
-                    targets: [0, 1, 2, 3, 4],
+                    targets: [0, 1, 2, 3, 7, 8, 9, 10, 11],
                     className: "text-nowrap"
                 },
                 {
