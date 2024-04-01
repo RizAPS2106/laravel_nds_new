@@ -271,7 +271,9 @@ class CutPlanController extends Controller
                 $addToCutPlan = CutPlan::create([
                     "kode" => $kodeCutPlan,
                     "tanggal" => $request->tanggal,
-                    "no_form" => $req['no_form']
+                    "no_form" => $req['no_form'],
+                    "created_by" => Auth::user()->id,
+                    "created_by_username" => Auth::user()->username,
                 ]);
 
                 if ($addToCutPlan) {

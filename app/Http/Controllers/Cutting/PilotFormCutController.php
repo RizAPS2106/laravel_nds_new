@@ -32,31 +32,32 @@ class PilotFormCutController extends Controller
      */
     public function index(Request $request)
     {
+        $additionalQuery = "";
         if ($request->ajax()) {
-            $additionalQuery = "";
 
             if ($request->dateFrom) {
-                $additionalQuery .= "and (cutting_plan.tgl_plan >= '" . $request->dateFrom . "' or a.updated_at >= '". $request->dateFrom ."')";
+                $additionalQuery .= "and (cutting_plan.tanggal >= '" . $request->dateFrom . "' or DATE(a.updated_at) >= '". $request->dateFrom ."')";
             }
 
             if ($request->dateTo) {
-                $additionalQuery .= " and (cutting_plan.tgl_plan <= '" . $request->dateTo . "' or a.updated_at <= '". $request->dateTo ."')";
+                $additionalQuery .= " and (cutting_plan.tanggal <= '" . $request->dateTo . "' or DATE(a.updated_at) <= '". $request->dateTo ."')";
             }
 
             if (Auth::user()->type == "meja") {
-                $additionalQuery .= " and a.no_meja = '" . Auth::user()->id . "' ";
+                $additionalQuery .= " and a.meja_id = '" . Auth::user()->id . "' ";
             }
 
             $keywordQuery = "";
             if ($request->search["value"]) {
                 $keywordQuery = "
                     and (
-                        a.id_marker like '%" . $request->search["value"] . "%' OR
-                        a.no_meja like '%" . $request->search["value"] . "%' OR
+                        a.tanggal like '%" . $request->search["value"] . "%' OR
+                        a.meja_id like '%" . $request->search["value"] . "%' OR
+                        a.meja_username like '%" . $request->search["value"] . "%' OR
                         a.no_form like '%" . $request->search["value"] . "%' OR
-                        a.tgl_form_cut like '%" . $request->search["value"] . "%' OR
+                        a.marker_input_kode like '%" . $request->search["value"] . "%' OR
                         b.act_costing_ws like '%" . $request->search["value"] . "%' OR
-                        panel like '%" . $request->search["value"] . "%' OR
+                        b.panel like '%" . $request->search["value"] . "%' OR
                         b.color like '%" . $request->search["value"] . "%' OR
                         a.status like '%" . $request->search["value"] . "%' OR
                         users.name like '%" . $request->search["value"] . "%'
@@ -64,51 +65,63 @@ class PilotFormCutController extends Controller
                 ";
             }
 
-            $data_spreading = DB::select("
+            $spreadingForms = DB::select("
                 SELECT
-                    a.id,
-                    a.no_meja,
-                    a.id_marker,
-                    a.no_form,
-                    a.tgl_form_cut,
+                    a.id form_cut_input_id,
                     b.id marker_id,
-                    b.act_costing_ws ws,
-                    panel,
+                    a.tanggal,
+                    a.no_form,
+                    a.tipe_form,
+                    a.status_form,
+                    a.meja_id,
+                    a.meja_username,
+                    a.marker_input_kode,
+                    b.act_costing_ws,
+                    CONCAT(b.panel, ' - ', b.urutan_marker) panel,
                     b.color,
-                    a.status,
-                    users.name nama_meja,
-                    b.panjang_marker,
+                    UPPER(users.name) meja,
+                    b.panjang_marker panjang_marker,
                     UPPER(b.unit_panjang_marker) unit_panjang_marker,
-                    b.comma_marker,
+                    b.comma_marker comma_marker,
                     UPPER(b.unit_comma_marker) unit_comma_marker,
-                    b.lebar_marker,
+                    b.lebar_marker lebar_marker,
                     UPPER(b.unit_lebar_marker) unit_lebar_marker,
-                    a.qty_ply,
-                    b.gelar_qty,
-                    b.po_marker,
-                    b.urutan_marker,
-                    b.cons_marker,
+                    CONCAT(COALESCE(a.total_ply, '0'), '/', a.qty_ply) ply_progress,
+                    COALESCE(b.gelar_qty_marker, 0) gelar_qty,
+                    COALESCE(a.qty_ply, 0) qty_ply,
+                    COALESCE(a.total_ply, '0') total_ply,
+                    b.po_marker po_marker,
+                    b.urutan_marker urutan_marker,
+                    b.cons_marker cons_marker,
+                    UPPER(b.tipe_marker) tipe_marker,
+                    b.notes,
                     cutting_plan.app,
-                    GROUP_CONCAT(CONCAT(' ', master_size_new.size, '(', marker_input_detail.ratio, ')') ORDER BY master_size_new.urutan ASC) marker_details
-                FROM cutting_plan
-                left join form_cut_input a on a.no_form = cutting_plan.no_form_cut_input
-                left join marker_input b on a.id_marker = b.kode
-                left join marker_input_detail on b.id = marker_input_detail.marker_id
-                left join master_size_new on marker_input_detail.size = master_size_new.size
-                left join users on users.id = a.no_meja
-                where
-                    b.cancel = 'N' and
-                    a.tipe_form_cut = 'MANUAL'
+                    GROUP_CONCAT(DISTINCT CONCAT(marker_input_detail.size, '(', marker_input_detail.ratio, ')') ORDER BY master_size_new.urutan ASC SEPARATOR ', ') marker_details
+                FROM
+                    cutting_plan
+                    LEFT JOIN form_cut_input a ON a.no_form = cutting_plan.no_form
+                    LEFT OUTER JOIN marker_input b ON a.marker_input_kode = b.kode and b.cancel = 'N'
+                    LEFT OUTER JOIN marker_input_detail ON b.kode = marker_input_detail.marker_input_kode
+                    LEFT JOIN master_size_new ON marker_input_detail.size = master_size_new.size
+                    LEFT JOIN users ON users.id = a.meja_id
+                WHERE
+                    a.id is not null AND
+                    a.tipe_form = 'pilot'
                     " . $additionalQuery . "
                     " . $keywordQuery . "
                 GROUP BY a.id
-                ORDER BY b.cancel asc, a.updated_at desc
+                ORDER BY
+                    FIELD(a.status_form, 'marker', 'form', 'form detail', 'form spreading', 'idle', 'finish'),
+                    FIELD(a.tipe_form, null, 'normal', 'manual', 'pilot'),
+                    FIELD(cutting_plan.app, 'y', 'n', null),
+                    a.no_form desc,
+                    a.updated_at desc
             ");
 
-            return DataTables::of($data_spreading)->toJson();
+            return DataTables::of($spreadingForms)->toJson();
         }
 
-        return view('pilot-form-cut.pilot-form-cut', ['page' => 'dashboard-cutting', "subPageGroup" => "proses-cutting", "subPage" => "form-cut-input"]);
+        return view('cutting.form-cutting.form-cut.form-cut-input', ["page" => "dashboard-cutting", "subPageGroup" => "proses-cutting", "subPage" => "form-cut-input"]);
     }
 
     public function getRatio(Request $request)

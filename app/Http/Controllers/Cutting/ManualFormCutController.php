@@ -2,6 +2,12 @@
 
 namespace App\Http\Controller\Cutting;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+
+use App\Http\Controllers\Controller;
+
 use App\Models\Marker;
 use App\Models\MarkerDetail;
 use App\Models\FormCutInput;
@@ -12,9 +18,7 @@ use App\Models\ScannedItem;
 use App\Models\CutPlan;
 use App\Models\Part;
 use App\Models\PartForm;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
+
 use Carbon\Carbon;
 use Yajra\DataTables\Facades\DataTables;
 use DB;

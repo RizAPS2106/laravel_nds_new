@@ -52,31 +52,34 @@ class FormCutInputController extends Controller
                 $keywordQuery = "
                     and (
                         a.tanggal like '%" . $request->search["value"] . "%' OR
-                        a.no_form like '%" . $request->search["value"] . "%' OR
-                        a.marker_input_kode like '%" . $request->search["value"] . "%' OR
                         a.meja_id like '%" . $request->search["value"] . "%' OR
                         a.meja_username like '%" . $request->search["value"] . "%' OR
+                        a.no_form like '%" . $request->search["value"] . "%' OR
+                        a.tipe_form like '%" . $request->search["value"] . "%' OR
+                        a.status_form like '%" . $request->search["value"] . "%' OR
+                        a.marker_input_kode like '%" . $request->search["value"] . "%' OR
                         b.act_costing_ws like '%" . $request->search["value"] . "%' OR
                         b.panel like '%" . $request->search["value"] . "%' OR
                         b.color like '%" . $request->search["value"] . "%' OR
-                        a.status like '%" . $request->search["value"] . "%' OR
-                        users.name like '%" . $request->search["value"] . "%'
+                        users.name like '%" . $request->search["value"] . "%' OR
+                        user_app.name like '%" . $request->search["value"] . "%'
                     )
                 ";
             }
 
             $spreadingForms = DB::select("
                 SELECT
-                    a.id form_cut_input_id,
+                    a.id,
                     b.id marker_id,
                     a.tanggal,
                     a.no_form,
+                    a.tipe_form,
+                    a.status_form,
                     a.meja_id,
                     a.meja_username,
-                    a.tipe_form,
-                    a.status,
                     a.marker_input_kode,
                     b.act_costing_ws,
+                    b.style,
                     CONCAT(b.panel, ' - ', b.urutan_marker) panel,
                     b.color,
                     UPPER(users.name) meja,
@@ -96,21 +99,24 @@ class FormCutInputController extends Controller
                     UPPER(b.tipe_marker) tipe_marker,
                     b.notes,
                     cutting_plan.app,
+                    user_app.name app_by_name,
                     GROUP_CONCAT(DISTINCT CONCAT(marker_input_detail.size, '(', marker_input_detail.ratio, ')') ORDER BY master_size_new.urutan ASC SEPARATOR ', ') marker_details
-                FROM cutting_plan
-                left join form_cut_input a on a.no_form = cutting_plan.no_form
-                left outer join marker_input b on a.marker_input_kode = b.kode and b.cancel = 'N'
-                left outer join marker_input_detail on b.kode = marker_input_detail.marker_input_kode
-                left join master_size_new on marker_input_detail.size = master_size_new.size
-                left join users on users.id = a.meja_id
-                where
+                FROM
+                    cutting_plan
+                    LEFT JOIN form_cut_input a ON a.no_form = cutting_plan.no_form
+                    LEFT OUTER JOIN marker_input b ON a.marker_input_kode = b.kode and b.cancel = 'N'
+                    LEFT OUTER JOIN marker_input_detail ON b.kode = marker_input_detail.marker_input_kode
+                    LEFT JOIN master_size_new ON marker_input_detail.size = master_size_new.size
+                    LEFT JOIN users ON users.id = a.meja_id
+                    LEFT JOIN users as user_app ON user_app.id = cutting_plan.app_by
+                WHERE
                     a.id is not null
                     " . $additionalQuery . "
                     " . $keywordQuery . "
                 GROUP BY a.id
                 ORDER BY
-                    FIELD(a.status, 'marker', 'form', 'form detail', 'form spreading', 'idle', 'finish'),
-                    FIELD(a.tipe_form_cut, null, 'normal', 'manual', 'pilot'),
+                    FIELD(a.status_form, 'marker', 'form', 'form detail', 'form spreading', 'idle', 'finish'),
+                    FIELD(a.tipe_form, null, 'normal', 'manual', 'pilot'),
                     FIELD(cutting_plan.app, 'y', 'n', null),
                     a.no_form desc,
                     a.updated_at desc

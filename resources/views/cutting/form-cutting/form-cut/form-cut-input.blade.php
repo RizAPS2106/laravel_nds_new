@@ -34,14 +34,15 @@
                             <th>No. Form</th>
                             <th>No. Meja</th>
                             <th>No. Marker</th>
-                            <th>No. WS</th>
-                            <th>Color</th>
-                            <th>Panel</th>
-                            <th class="align-bottom">Status</th>
                             <th>Size Ratio</th>
                             <th>Qty Ply</th>
+                            <th>Color</th>
+                            <th>Panel</th>
+                            <th>Style</th>
+                            <th>No. WS</th>
+                            <th>Status</th>
                             <th>Ket.</th>
-                            <th class="align-bottom">App</th>
+                            <th>App</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -49,20 +50,21 @@
                 </table>
             </div>
         </div>
-        <!-- Modal -->
+
+        <!-- Quick Form Detail -->
         <div class="modal fade" id="detailSpreadingModal" tabindex="-1" aria-labelledby="detailSpreadingModalLabel" aria-hidden="true">
             <form action="{{ route('update-spreading') }}" method="post" onsubmit="submitForm(this, event)">
                 @method('PUT')
                 <div class="modal-dialog modal-lg modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header bg-sb text-light">
-                            <h1 class="modal-title fs-5" id="detailSpreadingModalLabel">Detail Form</h1>
+                            <h1 class="modal-title fs-5" id="detailSpreadingModalLabel"><i class="fa fa-search fa-sm"></i> Detail Form</h1>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body" style="max-height: 65vh !important;">
                             <div class="row">
                                 <input type="hidden" id="edit_id" name="edit_id">
-                                <input type="hidden" id="edit_marker_input_kode" name="edit_marker_input_kode">
+                                <input type="hidden" id="edit_marker_id" name="edit_marker_id">
                                 <div class="col-6 col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label"><small>No. Form</small></label>
@@ -174,7 +176,7 @@
                                 <div class="col-4 col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label"><small>Meja</small></label>
-                                        <input type="text" class="form-control" id="edit_nama_meja" name="edit_nama_meja" value="" readonly />
+                                        <input type="text" class="form-control" id="edit_meja" name="edit_meja" value="-" readonly />
                                     </div>
                                 </div>
                                 <div class="col-4 col-md-4">
@@ -197,7 +199,7 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal"><i class="fa fa-times fa-sm"></i> Tutup</button>
                         </div>
                     </div>
                 </div>
@@ -207,22 +209,6 @@
 @endsection
 
 @section('custom-script')
-    <!-- DataTables  & Plugins -->
-    <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
-    <script src="{{ asset('plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
-
-    <!-- Select2 -->
-    <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
-    <script>
-        $('.select2').select2()
-        $('.select2bs4').select2({
-            theme: 'bootstrap4',
-            dropdownParent: $("#editMejaModal")
-        })
-    </script>
-
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             let oneWeeksBefore = new Date(new Date().setDate(new Date().getDate() - 7));
@@ -231,7 +217,7 @@
             let oneWeeksBeforeYear = oneWeeksBefore.getFullYear();
             let oneWeeksBeforeFull = oneWeeksBeforeYear + '-' + oneWeeksBeforeMonth + '-' + oneWeeksBeforeDate;
 
-            $("#tgl-awal").val(oneWeeksBeforeFull).trigger("change");
+            $("#tanggal_awal").val(oneWeeksBeforeFull).trigger("change");
 
             window.addEventListener("focus", () => {
                 $('#datatable').DataTable().ajax.reload(null, false);
@@ -240,7 +226,7 @@
 
         $('#datatable thead tr').clone(true).appendTo('#datatable thead');
         $('#datatable thead tr:eq(1) th').each(function(i) {
-            if (i != 0 && i != 7 && i != 8 && i != 11 && i != 12) {
+            if (i != 0 && i != 5 && i != 6 && i != 10 && i != 12) {
                 var title = $(this).text();
                 $(this).html('<input type="text" class="form-control form-control-sm"/>');
 
@@ -257,7 +243,7 @@
             }
         });
 
-        let datatable = $("#datatable").DataTable({
+        var datatable = $("#datatable").DataTable({
             processing: true,
             ordering: false,
             serverSide: true,
@@ -266,8 +252,8 @@
             ajax: {
                 url: '{{ route('form-cut-input') }}',
                 data: function(d) {
-                    d.dateFrom = $('#tgl-awal').val();
-                    d.dateTo = $('#tgl-akhir').val();
+                    d.tanggal_awal = $('#tanggal_awal').val();
+                    d.tanggal_akhir = $('#tanggal_akhir').val();
                 },
             },
             columns: [
@@ -281,22 +267,10 @@
                     data: 'no_form'
                 },
                 {
-                    data: 'nama_meja'
+                    data: 'meja'
                 },
                 {
-                    data: 'id_marker'
-                },
-                {
-                    data: 'ws'
-                },
-                {
-                    data: 'color'
-                },
-                {
-                    data: 'panel'
-                },
-                {
-                    data: 'status'
+                    data: 'marker_input_kode'
                 },
                 {
                     data: 'marker_details'
@@ -305,67 +279,55 @@
                     data: undefined
                 },
                 {
+                    data: 'color'
+                },
+                {
+                    data: 'panel'
+                },
+                {
+                    data: 'style'
+                },
+                {
+                    data: 'act_costing_ws'
+                },
+                {
+                    data: 'status_form'
+                },
+                {
                     data: 'notes'
                 },
                 {
-                    data: 'app'
+                    data: 'app_by_name'
                 },
             ],
             columnDefs: [
                 {
-                    targets: [8],
-                    className: "text-center align-middle",
-                    render: (data, type, row, meta) => {
-                        console.log(row.marker_details);
-
-                        icon = "";
-
-                        switch (data) {
-                            case "SPREADING":
-                                if (row.app != 'Y') {
-                                    icon = `<i class="fas fa-file fa-lg" style="color: #616161;"></i>`;
-                                } else {
-                                    icon = `<i class="fas fa-file fa-lg"></i>`;
-                                }
-                                break;
-                            case "PENGERJAAN MARKER":
-                            case "PENGERJAAN FORM CUTTING":
-                            case "PENGERJAAN FORM CUTTING DETAIL":
-                            case "PENGERJAAN FORM CUTTING SPREAD":
-                                icon =
-                                    `<i class="fas fa-sync-alt fa-spin fa-lg" style="color: #2243d6;"></i>`;
-                                break;
-                            case "SELESAI PENGERJAAN":
-                                icon = `<i class="fas fa-check fa-lg" style="color: #087521;"></i>`;
-                                break;
-                        }
-
-                        return icon;
-                    }
-                },
-                {
-                    targets: [9],
+                    targets: [5],
                     className: "text-nowrap",
                     render: (data, type, row, meta) => {
                         let color = "";
 
-                        if (row.status == 'SELESAI PENGERJAAN') {
+                        if (row.status_form == 'finish') {
                             color = '#087521';
-                        } else if (row.status == 'PENGERJAAN MARKER') {
+                        } else if (row.status_form == 'marker' ) {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING') {
+                        } else if (row.status_form == 'form') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING DETAIL') {
+                        } else if (row.status_form == 'form detail') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING SPREAD') {
+                        } else if (row.status_form == 'form spreading') {
                             color = '#2243d6';
+                        } else {
+                            if (row.app != 'y') {
+                                color = '#616161';
+                            }
                         }
 
                         return  "<span style='font-weight: 600; color: "+ color + "' >" + (data ? data.replace(/,/g, '<br>') : '-') + "</span>"
                     }
                 },
                 {
-                    targets: [10],
+                    targets: [6],
                     render: (data, type, row, meta) => {
                         return `
                             <div class="progress border border-sb position-relative" style="min-width: 50px;height: 21px">
@@ -376,37 +338,65 @@
                     }
                 },
                 {
-                    targets: [12],
-                    className: "text-center align-middle",
+                    targets: [11],
+                    className: "text-center",
+                    render: (data, type, row, meta) => {
+                        icon = "";
+
+                        switch (data) {
+                            case "idle":
+                                if (row.app != 'y') {
+                                    icon = `<i class="fas fa-file fa-lg" style="color: #616161;"></i>`;
+                                } else {
+                                    icon = `<i class="fas fa-file fa-lg"></i>`;
+                                }
+                                break;
+                            case "marker":
+                            case "form":
+                            case "form detail":
+                            case "form spreading":
+                                icon = `<i class="fas fa-sync-alt fa-spin fa-lg" style="color: #2243d6;"></i>`;
+                                break;
+                            case "finish":
+                                icon = `<i class="fas fa-check fa-lg" style="color: #087521;"></i>`;
+                                break;
+                        }
+
+                        return icon;
+                    }
+                },
+                {
+                    targets: [13],
+                    className: "text-center",
                     render: (data, type, row, meta) => {
                         icon = "";
                         color = "";
 
-                        if (row.status == 'SELESAI PENGERJAAN') {
+                        if (row.status_form == 'finish') {
                             color = '#087521';
-                        } else if (row.status == 'PENGERJAAN MARKER') {
+                        } else if (row.status_form == 'marker') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING') {
+                        } else if (row.status_form == 'form') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING DETAIL') {
+                        } else if (row.status_form == 'form detail') {
                             color = '#2243d6';
-                        } else if (row.status == 'PENGERJAAN FORM CUTTING SPREAD') {
+                        } else if (row.status_form == 'form spreading') {
                             color = '#2243d6';
                         } else {
-                            if (row.app != 'Y') {
+                            if (row.app != 'y') {
                                 color = '#616161';
                             }
                         }
 
-                        switch (data) {
-                            case "Y":
-                                icon = `<i class="fas fa-check fa-lg" style="color: ` + color + `;"></i>`;
+                        switch (row.app) {
+                            case "y":
+                                icon = `<span class="text-nowrap" style="color: ` + color + `;font-weight: 600;">`+data+` <i class="fas fa-check fa-sm"></i></span>`;
                                 break;
-                            case "N":
-                                icon = `<i class="fas fa-times fa-lg" style="color: ` + color + `;"></i>`;
+                            case "n":
+                                icon = `<span class="text-nowrap" style="color: ` + color + `;font-weight: 600;">`+data+` <i class="fas fa-times fa-sm"></i></span>`;
                                 break;
                             default:
-                                icon = `<i class="fas fa-minus fa-lg" style="color: ` + color + `;"></i>`;
+                                icon = `<span class="text-nowrap" style="color: ` + color + `;font-weight: 600;">`+data+` <i class="fas fa-minus fa-sm"></i></span>`;
                                 break;
                         }
 
@@ -433,7 +423,7 @@
                     }
                 },
                 {
-                    targets: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 13],
+                    targets: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13],
                     className: "text-nowrap"
                 },
                 {
@@ -452,7 +442,7 @@
                         } else if (row.status_form == 'form spreading') {
                             color = '#2243d6';
                         } else {
-                            if (row.app != 'Y') {
+                            if (row.app != 'y') {
                                 color = '#616161';
                             }
                         }
@@ -462,24 +452,24 @@
                 }
             ],
             rowCallback: function( row, data, index ) {
-                if (data['tipe_form_cut'] == 'MANUAL') {
+                if (data['tipe_form'] == 'manual') {
                     $('td', row).css('background-color', '#e7dcf7');
                     $('td', row).css('border', '0.15px solid #d0d0d0');
-                } else if (data['tipe_form_cut'] == 'PILOT') {
+                } else if (data['tipe_form'] == 'pilot') {
                     $('td', row).css('background-color', '#c5e0fa');
                     $('td', row).css('border', '0.15px solid #d0d0d0');
                 }
             }
         });
 
-        let datatableRatio = $("#datatable-ratio").DataTable({
+        var datatableRatio = $("#datatable-ratio").DataTable({
             ordering: false,
             processing: true,
             serverSide: true,
             ajax: {
-                url: '{{ route('get-form-cut-ratio') }}',
+                url: '{{ route('get-marker-ratio') }}',
                 data: function(d) {
-                    d.cbomarker = $('#edit_marker_id').val();
+                    d.marker_input_kode = $('#edit_marker_input_kode').val();
                 },
             },
             columns: [
@@ -490,17 +480,17 @@
                     data: 'ratio'
                 },
                 {
-                    data: 'cut_qty'
+                    data: 'qty_cutting'
                 },
             ]
         });
 
         function dataTableReload() {
-            datatable.ajax.reload();
+            $('#datatable').DataTable().ajax.reload(null, false);
         }
 
         function dataTableRatioReload() {
-            datatableRatio.ajax.reload();
+            $('#datatable-ratio').DataTable().ajax.reload();
         }
 
         function updateNoCut() {
