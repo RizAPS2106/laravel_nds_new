@@ -330,17 +330,19 @@ class SpreadingController extends Controller
             "edit_meja_id" => "required",
         ]);
 
-        $updateNoMeja = FormCutInput::where('id', $validatedRequest['edit_id'])->update([
-            'meja_id' => $validatedRequest['edit_meja_id']
-        ]);
+        $meja = User::where("id", $validatedRequest['edit_meja_id'])->first();
+        $updateFormCutMeja = FormCutInput::where('id', $validatedRequest['edit_id'])->
+            update([
+                'meja_id' => $meja->id,
+                'meja_username' => $meja->username
+            ]);
 
-        if ($updateNoMeja) {
-            $updatedData = FormCutInput::where('id', $validatedRequest['edit_id'])->first();
-            $meja = User::where('id', $validatedRequest['edit_meja_id'])->first();
+        if ($updateFormCutMeja) {
+            $updatedFormCutMeja = FormCutInput::where('id', $validatedRequest['edit_id'])->first();
 
             return array(
                 'status' => 200,
-                'message' => 'Alokasi Meja "' . ucfirst($meja->name) . '" ke form "' . $updatedData->no_form . '" berhasil',
+                'message' => 'Alokasi Meja "' . ucfirst($meja->name) . '" ke form "' . $updatedFormCutMeja->no_form . '" berhasil',
                 'redirect' => '',
                 'table' => 'datatable',
                 'additional' => [],
@@ -362,12 +364,14 @@ class SpreadingController extends Controller
             "edit_status" => "required",
         ]);
 
-        $updateStatusForm = FormCutInput::where('id', $validatedRequest['edit_id_status'])->update([
-            'status' => $validatedRequest['edit_status']
-        ]);
+        $updateStatusForm = FormCutInput::where('id', $validatedRequest['edit_id_status'])->
+            update([
+                'status' => $validatedRequest['edit_status']
+            ]);
 
         if ($updateStatusForm) {
             $updatedData = FormCutInput::where('id', $validatedRequest['edit_id_status'])->first();
+
             return array(
                 'status' => 200,
                 'message' => 'Form  "' . $updatedData->no_form. '" berhasil diubah ke status '.$validatedRequest['edit_status'].'. ',

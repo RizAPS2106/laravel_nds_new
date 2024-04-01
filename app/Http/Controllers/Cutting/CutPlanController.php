@@ -341,24 +341,34 @@ class CutPlanController extends Controller
         $exist = [];
 
         $approvedBy = Auth::user()->id;
+        $approvedByUsername = Auth::user()->username;
         $approvedAt = $now;
 
         if (count($request['no_form']) > 0) {
             foreach ($request['no_form'] as $noFormId => $noFormVal) {
-                $updateCutPlan = CutPlan::where('kode', $request['manage_kode'])->
-                where('no_form', $request['no_form'][$noFormId])->
-                update([
-                    'app' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $request['approve'][$noFormId] : 'N') : 'N',
-                    'app_by' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $approvedBy : null) : 'N',
-                    'app_at' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $approvedAt : null) : 'N',
-                ]);
+                $meja = null;
+                if (array_key_exists($noFormId, $request['meja_id'])) {
+                    $meja = User::where("id", $request['meja_id'][$noFormId])->first();
+                }
 
-                $updateForm = FormCutInput::where('no_form', $request['no_form'][$noFormId])->update([
-                    'meja_id' => (array_key_exists($noFormId, $request['meja_id'])) ? $request['meja_id'][$noFormId] : null,
-                    'app' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $request['approve'][$noFormId] : 'N') : 'N',
-                    'app_by' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $approvedBy : null) : 'N',
-                    'app_at' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $approvedAt : null) : 'N',
-                ]);
+                $updateCutPlan = CutPlan::where('kode', $request['manage_kode'])->
+                    where('no_form', $request['no_form'][$noFormId])->
+                    update([
+                        'app' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $request['approve'][$noFormId] : 'N') : 'N',
+                        'app_by' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $approvedBy : null) : 'N',
+                        'app_by_username' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $approvedByUsername : null) : 'N',
+                        'app_at' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $approvedAt : null) : 'N',
+                    ]);
+
+                $updateForm = FormCutInput::where('no_form', $request['no_form'][$noFormId])->
+                    update([
+                        'meja_id' => $meja ? $meja->id : null,
+                        'meja_username' => $meja ? $meja->username : null,
+                        'app' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $request['approve'][$noFormId] : 'N') : 'N',
+                        'app_by' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $approvedBy : null) : 'N',
+                        'app_by_username' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $approvedByUsername : null) : 'N',
+                        'app_at' => $request['approve'] ? ((array_key_exists($noFormId, $request['approve'])) ? $approvedAt : null) : 'N',
+                    ]);
 
                 if ($updateCutPlan && $updateForm) {
                     array_push($success, $noFormVal);
@@ -494,12 +504,28 @@ class CutPlanController extends Controller
             })->addIndexColumn()->addColumn('form_info', function ($row) {
                 $totalPly = ($row->formCutInput ? $row->formCutInput->total_ply : 0);
                 $qtyPly = ($row->formCutInput ? $row->formCutInput->qty_ply : 0);
+                $status = ($row->formCutInput ? $row->formCutInput->status_form : '');
+                switch ($status) {
+                    case "idle" :
+                        $status = "<span class='fw-bold'>".strtoupper($status)." <i class='fa fa-file fa-sm'></span>";
+                        break;
+                    case "marker" :
+                    case "pilot marker" :
+                    case "form" :
+                    case "form detail" :
+                    case "form spreading" :
+                        $status = "<span class='fw-bold text-primary'>".strtoupper($status)." <i class='fa fa-refresh fa-sm fa-spin'></span>";
+                        break;
+                    case "finish" :
+                        $status = "<span class='fw-bold text-success'>".strtoupper($status)." <i class='fa fa-check fa-sm'></span>";
+                        break;
+                }
 
                 $formInfo = "<ul class='list-group'>";
                 $formInfo = $formInfo . "<li class='list-group-item'>Tanggal Form :<br><b>" . ($row->formCutInput ? $row->formCutInput->tanggal : '-') . "</b></li>";
                 $formInfo = $formInfo . "<li class='list-group-item'>No. Form :<br><b>" . $row->no_form . "</b></li>";
                 $formInfo = $formInfo . "<li class='list-group-item'>Qty Ply :<br><b>".'<div class="progress border border-sb position-relative my-1" style="min-width: 50px;height: 21px"><p class="position-absolute" style="top: 50%;left: 50%;transform: translate(-50%, -50%);">'.($totalPly ? $totalPly : 0).'/'.($qtyPly ? $qtyPly : 0).'</p><div class="progress-bar" style="background-color: #75baeb;width: '.((($totalPly ? $totalPly : 0)/($qtyPly ? $qtyPly : 1))*100).'%" role="progressbar"></div></div>' . "</b></li>";
-                $formInfo = $formInfo . "<li class='list-group-item'>Status :<br><b>" . ($row->formCutInput ? $row->formCutInput->status_form : '-') . "</b></li>";
+                $formInfo = $formInfo . "<li class='list-group-item'>Status :<br><b>" . $status . "</b></li>";
                 $formInfo = $formInfo . "</ul>";
 
                 return $formInfo;

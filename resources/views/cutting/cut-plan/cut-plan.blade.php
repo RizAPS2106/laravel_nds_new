@@ -324,24 +324,6 @@
             ],
             columnDefs: [
                 {
-                    targets: [2],
-                    render: (data, type, row, meta) => {
-                        let color = "";
-
-                        if (row.status == 'finish') {
-                            color = '#087521';
-                        } else if (row.status == 'form') {
-                            color = '#2243d6';
-                        } else if (row.status == 'form detail') {
-                            color = '#2243d6';
-                        } else if (row.status == 'form spreading') {
-                            color = '#2243d6';
-                        }
-
-                        return data ? "<span style='color: " + color + "' >" + data.toUpperCase() + "</span>" : "<span style=' color: " + color + "'>-</span>"
-                    }
-                },
-                {
                     targets: [4],
                     render: (data, type, row, meta) => {
                         let color = "";
@@ -405,13 +387,13 @@
                     render: (data, type, row, meta) => {
                         let color = "";
 
-                        if (row.status == 'finish') {
+                        if (row.status_form == 'finish') {
                             color = '#087521';
-                        } else if (row.status == 'form') {
+                        } else if (row.status_form == 'form') {
                             color = '#2243d6';
-                        } else if (row.status == 'form detail') {
+                        } else if (row.status_form == 'form detail') {
                             color = '#2243d6';
-                        } else if (row.status == 'form spreading') {
+                        } else if (row.status_form == 'form spreading') {
                             color = '#2243d6';
                         }
 

@@ -238,10 +238,10 @@
                 },
             ],
             rowCallback: function( row, data, index ) {
-                if (data['tipe_form_cut'] == 'manual') {
+                if (data['tipe_form'] == 'manual') {
                     $('td', row).css('background-color', '#e7dcf7');
                     $('td', row).css('border', '0.15px solid #d0d0d0');
-                } else if (data['tipe_form_cut'] == 'pilot') {
+                } else if (data['tipe_form'] == 'pilot') {
                     $('td', row).css('background-color', '#c5e0fa');
                     $('td', row).css('border', '0.15px solid #d0d0d0');
                 }
@@ -454,10 +454,10 @@
                 },
             ],
             rowCallback: function( row, data, index ) {
-                if (data['tipe_form_cut'] == 'manual') {
+                if (data['tipe_form'] == 'manual') {
                     $('td', row).css('background-color', '#e7dcf7');
                     $('td', row).css('border', '0.15px solid #d0d0d0');
-                } else if (data['tipe_form_cut'] == 'pilot') {
+                } else if (data['tipe_form'] == 'pilot') {
                     $('td', row).css('background-color', '#c5e0fa');
                     $('td', row).css('border', '0.15px solid #d0d0d0');
                 }

@@ -1211,6 +1211,7 @@
                 var consActual = document.getElementById('cons_act').value;
                 var consPipping = document.getElementById('cons_piping').value;
                 var consAmpar = document.getElementById('cons_ampar').value;
+                var unitConsAmpar = document.getElementById('unit_cons_ampar').value;
                 var estPiping = document.getElementById('est_piping').value;
                 var unitEstPiping = document.getElementById('unit_est_piping').value;
                 var estKain = document.getElementById('est_kain').value;
@@ -1232,6 +1233,7 @@
                         cons_act: consActual,
                         cons_piping: consPipping,
                         cons_ampar: consAmpar,
+                        unit_cons_ampar: unitConsAmpar,
                         est_piping: estPiping,
                         unit_est_piping: unitEstPiping,
                         est_kain: estKain,
@@ -1561,13 +1563,13 @@
                                 operator: $('#operator').val(),
                                 consAct: $('#cons_actual_gelaran').val(),
                                 unitConsAct: $('#unit_cons_actual_gelaran').val(),
-                                consActNosr: $('#cons_actual_gelaran_short_rolless').val(),
-                                unitConsActNosr: $('#unit_cons_actual_gelaran_short_rolless').val(),
+                                consActNoSr: $('#cons_actual_gelaran_short_rolless').val(),
+                                unitConsActNoSr: $('#unit_cons_actual_gelaran_short_rolless').val(),
                                 consWsUprate: $('#cons_ws_uprate').val(),
                                 consMarkerUprate: $('#cons_marker_uprate').val(),
                                 consWsUprateNoSr: $('#cons_ws_uprate_nosr').val(),
                                 consMarkerUprateNoSr: $('#cons_marker_uprate_nosr').val(),
-                                totalLembar: totalLembar
+                                totalPly: totalPly
                             },
                             success: function(res) {
                                 document.getElementById("loading").classList.add("d-none");
@@ -2724,8 +2726,8 @@
                 let currentLembar = Number($("#current_lembar_gelaran").val());
                 let qtyPly = Number($("#qty_ply").val());
 
-                document.getElementById("current_ply_progress_txt").innerText = (totalLembar + currentLembar) + "/" + qtyPly;
-                document.getElementById("current_ply_progress").style.width = Number(qtyPly) > 0 ? (Number( totalLembar + currentLembar) / Number(qtyPly) * 100) + "%" : "0%";
+                document.getElementById("current_ply_progress_txt").innerText = (totalPly + currentLembar) + "/" + qtyPly;
+                document.getElementById("current_ply_progress").style.width = Number(qtyPly) > 0 ? (Number( totalPly + currentLembar) / Number(qtyPly) * 100) + "%" : "0%";
             }
 
             // -Lock Form Cut Input-
@@ -2876,7 +2878,7 @@
             var totalTotalPemakaian = 0;
             var totalShortRoll = 0;
             var totalRemark = 0;
-            var totalLembar = 0;
+            var totalPly = 0;
             var totalPiping = 0;
             var totalQtyFabric = 0;
             var latestStatus = "";
@@ -2956,7 +2958,7 @@
 
             // -Append Scanned Item to Summary Table-
             function appendScannedItem(data) {
-                totalLembar += Number(data.lembar_gelaran);
+                totalPly += Number(data.lembar_gelaran);
                 totalPiping += Number(data.piping);
                 latestStatus != 'extension complete' ? totalQtyFabric += Number(data.qty) : '';
                 latestUnit = data.unit;
@@ -3055,7 +3057,7 @@
                 document.getElementById("total-sisa-gelaran").innerText = Number(totalSisaGelaran).round(2);
                 document.getElementById("total-sambungan").innerText = Number(totalSambungan).round(2);
                 document.getElementById("total-est-amparan").innerText = Number(totalEstAmparan).round(2);
-                document.getElementById("total-lembar").innerText = Number(totalLembar).round(2);
+                document.getElementById("total-lembar").innerText = Number(totalPly).round(2);
                 document.getElementById("total-average-time").innerText = (averageTotalAverageTimeMinute + ":" +averageTotalAverageTimeSecond);
                 document.getElementById("total-kepala-kain").innerText = Number(totalKepalaKain).round(2);
                 document.getElementById("total-sisa-tidak-bisa").innerText = Number(totalSisaTidakBisa).round(2);
